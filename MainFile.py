@@ -79,14 +79,13 @@ class VirtualKeyboard(tk.Tk):
 from PyQt5.QtCore import QObject, pyqtSignal
 
 class SharedData(QObject):
-    date_updated = pyqtSignal(str)
-    time_updated = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
         self._date = None
         self._time = None
-
+        self._date = QDate.currentDate().toString("yyyy-MM-dd")
+        self._time = QTime.currentTime().toString()
     @property
     def date(self):
         return self._date
@@ -123,7 +122,7 @@ class SettingWindow(QMainWindow):
 
         self.setting.clicked.connect(self.open_next)
         self.connection.clicked.connect(self.open_connection)
-        self.next.clicked.connect(self.next_settings)
+
 
         self.work.clicked.connect(self.open_work)
 
@@ -216,9 +215,7 @@ class USBWindow(QMainWindow):
         self.hide()
 
 
-    def update_system_time(self):
-        current_time = QTime.currentTime().toString()
-        shared_data.time = current_time
+
 class aboutWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -338,9 +335,6 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         proc2 = subprocess.Popen(["python", "s5.py"])
         time.sleep(10)
         proc2.terminate()
-        proc2 = subprocess.Popen(["python", "s6.py"])
-        time.sleep(10)
-        proc2.terminate()
 
 class NumericKeyboard(QMainWindow, Ui_MainWindow4):
 
@@ -366,7 +360,8 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
         self.Del.clicked.connect(self.delete_number)
         self.enter.clicked.connect(self.enter_pressed)
 
-        self.Retry.clicked.connect(self.retry)
+        self.cross.clicked.connect(self.destroy)
+
 
     def add_number(self, number):
         current_text = self.textEdit.toPlainText()
@@ -382,17 +377,16 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
         self.saved_value = self.textEdit.toPlainText()
         print(f"Saved value: {self.saved_value}")
         self.close()
-
+        proc2 = subprocess.Popen(["python", "s6.py"])
+        time.sleep(10)
+        proc2.terminate()
     def get_saved_value(self):
             return self.saved_value
-    def retry(self):
-        self.textEdit.clear()
+    def destroy(self):
+            self.hide()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = SettingWindow()
     window.show()
-    timer = QTimer()
-    timer.timeout.connect(update_shared_data_time)
-    timer.start(1000)
     sys.exit(app.exec_())

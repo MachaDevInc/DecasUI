@@ -128,19 +128,19 @@ class SettingWindow(QMainWindow):
 
     def open_next(self):
         self.usb_window = USBWindow()
-        self.usb_window.show()
+        self.usb_window.showFullScreen()
         self.hide()
     def next_settings(self):
         self.settings_window = SettingsWindow1(self)
-        self.settings_window.show()
+        self.settings_window.showFullScreen()
         self.hide()
     def open_connection(self):
         self.connection_window = connectionWindow()
-        self.connection_window.show()
+        self.connection_window.showFullScreen()
         self.hide()
     def open_work(self):
         self.work_window = workWindow()
-        self.work_window.show()
+        self.work_window.showFullScreen()
         self.hide()
 class connectionWindow(QMainWindow):
     def __init__(self):
@@ -150,7 +150,7 @@ class connectionWindow(QMainWindow):
         self.back.clicked.connect(self.go_back)
     def go_back(self):
         self.setting_window = SettingWindow()
-        self.setting_window.show()
+        self.setting_window.showFullScreen()
         self.hide()
 class workWindow(QMainWindow):
     def __init__(self):
@@ -160,7 +160,7 @@ class workWindow(QMainWindow):
         self.back.clicked.connect(self.go_back)
     def go_back(self):
         self.setting_window = SettingWindow()
-        self.setting_window.show()
+        self.setting_window.showFullScreen()
         self.hide()
 class USBWindow(QMainWindow):
     def __init__(self):
@@ -184,34 +184,34 @@ class USBWindow(QMainWindow):
 
     def open_wifi(self):
         # Show the existing wifi_window instance
-        self.wifi_window.show()
+        self.wifi_window.showFullScreen()
         self.hide()
     def go_back(self):
         self.setting_window = SettingWindow()
-        self.setting_window.show()
+        self.setting_window.showFullScreen()
         self.hide()
 
     def open_wifi(self):
         self.usb_window = WifiWindow()
-        self.usb_window.show()
+        self.usb_window.showFullScreen()
         self.hide()
 
     def open_about(self):
         self.about_window = aboutWindow()
-        self.about_window.show()
+        self.about_window.showFullScreen()
         self.hide()
     def open_rs(self):
         self.usb_window = RSWindow()
-        self.usb_window.show()
+        self.usb_window.showFullScreen()
         self.hide()
 
     def open_usb(self):
         self.usb_window = usbWindow()
-        self.usb_window.show()
+        self.usb_window.showFullScreen()
         self.hide()
     def open_bluetooth(self):
         self.usb_window = bluetoothWindow()
-        self.usb_window.show()
+        self.usb_window.showFullScreen()
         self.hide()
 
 
@@ -226,7 +226,7 @@ class aboutWindow(QMainWindow):
 
     def go_back(self):
         self.setting_window = SettingWindow()
-        self.setting_window.show()
+        self.setting_window.showFullScreen()
         self.hide()
 class WifiWindow(QMainWindow):
     def __init__(self):
@@ -234,13 +234,19 @@ class WifiWindow(QMainWindow):
         loadUi('wifiset.ui', self)
 
         self.back.clicked.connect(self.go_back)
-        self.connection.clicked.connect(lambda: self.open_virtual_keyboard(self.textEdit))
+
 
         self.password.clicked.connect(lambda: self.open_virtual_keyboard(self.textEdit1))
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
+        self.ssid.addItems(["1", "2", "3"])
 
+        # Connect the combo box's activated signal to a slot function
+        self.ssid.activated[str].connect(self.on_combobox_activated)
+
+    def on_combobox_activated(self, text):
+        print(f"Selected option: {text}")
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
@@ -248,7 +254,7 @@ class WifiWindow(QMainWindow):
 
     def go_back(self):
         self.setting_window = SettingWindow()
-        self.setting_window.show()
+        self.setting_window.showFullScreen()
         self.hide()
 
     def update_text_edit(self, text_edit, entered_text):
@@ -264,12 +270,19 @@ class RSWindow(QMainWindow):
 
         self.back.clicked.connect(self.go_back)
         self.address.clicked.connect(lambda: self.open_virtual_keyboard(self.textEdit))
-        self.parity.clicked.connect(lambda: self.open_virtual_keyboard(self.textEdit2))
-        self.baudrate.clicked.connect(lambda: self.open_virtual_keyboard(self.textEdit1))
+        self.baudrate.addItems(["9600", "19200", "38400", "115200"])
+        self.parity.addItems(["None", "Even", "Odd"])
+        # Connect the combo box's activated signal to a slot function
+        self.baudrate.activated[str].connect(self.on_combobox_activated)
 
+        self.parity.activated[str].connect(self.on_combobox_activated1)
+    def on_combobox_activated(self, text):
+        print(f"Selected option: {text}")
+    def on_combobox_activated1(self, text):
+        print(f"Selected option: {text}")
     def go_back(self):
         self.setting_window = SettingWindow()
-        self.setting_window.show()
+        self.setting_window.showFullScreen()
         self.hide()
 
     def update_text_edit(self, text_edit, entered_text):
@@ -284,12 +297,18 @@ class usbWindow(QMainWindow):
         loadUi('usbset.ui', self)
 
         self.back.clicked.connect(self.go_back)
-        self.COM.clicked.connect(self.open_virtual_keyboard)
+        self.comport.addItems(["COM1", "COM2", "COM3", "COM4", "COM5", "COM6"])
+
+        # Connect the combo box's activated signal to a slot function
+        self.comport.activated[str].connect(self.on_combobox_activated)
+
+    def on_combobox_activated(self, text):
+        print(f"Selected option: {text}")
 
 
     def go_back(self):
         self.setting_window = SettingWindow()
-        self.setting_window.show()
+        self.setting_window.showFullScreen()
         self.hide()
 
     def update_text_edit(self, entered_text):
@@ -304,12 +323,18 @@ class bluetoothWindow(QMainWindow):
         loadUi('bluetooth.ui', self)
 
         self.back.clicked.connect(self.go_back)
-        self.bluetooth1.clicked.connect(self.open_virtual_keyboard)
+        self.bluetooth1.addItems(["Device1", "Device2 ", "Device3"])
+
+        # Connect the combo box's activated signal to a slot function
+        self.bluetooth1.activated[str].connect(self.on_combobox_activated)
+
+    def on_combobox_activated(self, text):
+        print(f"Selected option: {text}")
 
 
     def go_back(self):
         self.setting_window = SettingWindow()
-        self.setting_window.show()
+        self.setting_window.showFullScreen()
         self.hide()
 
 
@@ -330,7 +355,7 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.Retreive.clicked.connect(self.next_settings5)
     def open_keyboard(self):
         self.settings_window = NumericKeyboard(self)
-        self.settings_window.show()
+        self.settings_window.showFullScreen()
     def next_settings5(self):
         proc2 = subprocess.Popen(["python", "s5.py"])
         time.sleep(10)
@@ -388,5 +413,5 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = SettingWindow()
-    window.show()
+    window.showFullScreen()
     sys.exit(app.exec_())

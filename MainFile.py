@@ -132,7 +132,7 @@ shared_data = SharedData()
 
 
 class SettingWindow(QMainWindow):
-    def __init__(self, stacked_widget):
+    def __init__(self, stacked_widget, open_settings_window1):
         super().__init__()
         loadUi('Ready.ui', self)
 
@@ -140,26 +140,6 @@ class SettingWindow(QMainWindow):
         self.setting.clicked.connect(self.open_next)
         self.connection.clicked.connect(self.open_connection)
         self.work.clicked.connect(self.open_work)
-        
-        # Set the path to the directory you want to check
-        directory_path = '/var/spool/cups-pdf/ANONYMOUS/'
-        
-        open_settings_window1 = False
-
-        while open_settings_window1 is not True:
-            # List the contents of the directory
-            contents = os.listdir(directory_path)
-            time.sleep(0.5)
-
-            # Check if the directory is not empty
-            if contents:
-                open_settings_window1 = True
-                for item in contents:
-                    # Check if the item is a file (not a directory)
-                    if os.path.isfile(os.path.join(directory_path, item)):
-                        print(item)
-            else:
-                open_settings_window1 = False
 
         if open_settings_window1:
             self.SettingsWindow1_window = SettingsWindow1(self.stacked_widget)
@@ -501,9 +481,34 @@ class MyApp(QApplication):
     def __init__(self):
         super().__init__(sys.argv)
         self.stacked_widget = QStackedWidget()
-        self.setting_window = SettingWindow(self.stacked_widget)
+        
+        open_settings_window1 = False
+        
+        self.setting_window = SettingWindow(self.stacked_widget, open_settings_window1)
         self.stacked_widget.addWidget(self.setting_window)
         self.stacked_widget.showFullScreen()
+        
+        # Set the path to the directory you want to check
+        directory_path = '/var/spool/cups-pdf/ANONYMOUS/'
+
+        while open_settings_window1 is not True:
+            # List the contents of the directory
+            contents = os.listdir(directory_path)
+            time.sleep(0.5)
+
+            # Check if the directory is not empty
+            if contents:
+                open_settings_window1 = True
+                self.setting_window = SettingWindow(self.stacked_widget, open_settings_window1)
+                self.stacked_widget.addWidget(self.setting_window)
+                self.stacked_widget.showFullScreen()
+                for item in contents:
+                    # Check if the item is a file (not a directory)
+                    if os.path.isfile(os.path.join(directory_path, item)):
+                        print(item)
+            else:
+                open_settings_window1 = False
+                
 
 if __name__ == '__main__':
     app = MyApp()

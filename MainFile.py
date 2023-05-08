@@ -241,21 +241,8 @@ class WifiWindow(QMainWindow):
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
         interface = "wlan0"  # The default interface for Raspberry Pi's WiFi
-        networks = get_wifi_networks(interface)
-        print("Available WiFi networks:")
-        for network in networks:
-            self.ssid.addItems(["{network}"])
-
-        # Connect the combo box's activated signal to a slot function
-        self.ssid.activated[str].connect(self.on_combobox_activated)
-
-    def get_wifi_networks(interface="wlan0"):
         cmd = f"iwlist {interface} scan"
         output = subprocess.check_output(cmd, shell=True).decode("utf-8")
-        networks = parse_wifi_output(output)
-        return networks
-
-    def parse_wifi_output(output):
         lines = output.split("\n")
         networks = []
 
@@ -263,8 +250,13 @@ class WifiWindow(QMainWindow):
             line = line.strip()
             if "ESSID" in line:
                 networks.append(line.split(":")[1].strip('"'))
+        
+        print("Available WiFi networks:")
+        for network in networks:
+            self.ssid.addItems(["{network}"])
 
-        return networks
+        # Connect the combo box's activated signal to a slot function
+        self.ssid.activated[str].connect(self.on_combobox_activated)
 
     def on_combobox_activated(self, text):
         print(f"Selected option: {text}")

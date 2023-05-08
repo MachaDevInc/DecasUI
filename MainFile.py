@@ -1,7 +1,9 @@
+from PyQt5.QtCore import QObject, pyqtSignal
 import sys
+import os
 import subprocess
 import tkinter as tk
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedWidget
 from PyQt5.uic import loadUi
 import time
 from PyQt5.QtCore import QTimer, QTime, QDate
@@ -16,67 +18,74 @@ from W4 import Ui_MainWindow4
 proc1 = subprocess.Popen(["python", "progress bar.py"])
 time.sleep(1)
 proc1.terminate()
+
+
 class VirtualKeyboard(tk.Tk):
 
     def __init__(self, on_enter_callback):
-            super().__init__()
+        super().__init__()
 
-            self.title("Virtual Keyboard")
-            self.configure(bg='black')
+        self.title("Virtual Keyboard")
+        self.configure(bg='black')
 
-            self.input_var = tk.StringVar()
-            self.input_label = tk.Entry(self, textvariable=self.input_var, width=80)
-            self.input_label.grid(row=0, column=0, columnspan=15)
+        self.input_var = tk.StringVar()
+        self.input_label = tk.Entry(
+            self, textvariable=self.input_var, width=80)
+        self.input_label.grid(row=0, column=0, columnspan=15)
 
-            self.keys = [
-                ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
-                ['Tab', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\'],
-                ['Caps Lock', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', 'Enter'],
-                ['Shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 'Shift'],
-                ['Ctrl', 'Alt', ' ', 'Alt', 'Ctrl']
-            ]
+        self.keys = [
+            ['`', '1', '2', '3', '4', '5', '6', '7',
+                '8', '9', '0', '-', '=', 'Backspace'],
+            ['Tab', 'q', 'w', 'e', 'r', 't', 'y',
+                'u', 'i', 'o', 'p', '[', ']', '\\'],
+            ['Caps Lock', 'a', 's', 'd', 'f', 'g', 'h',
+                'j', 'k', 'l', ';', '\'', 'Enter'],
+            ['Shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 'Shift'],
+            ['Ctrl', 'Alt', ' ', 'Alt', 'Ctrl']
+        ]
 
-            self.shift_mappings = {
-                '`': '~', '1': '!', '2': '@', '3': '#', '4': '$', '5': '%', '6': '^', '7': '&', '8': '*', '9': '(',
-                '0': ')',
-                '-': '_', '=': '+', '[': '{', ']': '}', '\\': '|', ';': ':', '\'': '"', ',': '<', '.': '>', '/': '?'
-            }
+        self.shift_mappings = {
+            '`': '~', '1': '!', '2': '@', '3': '#', '4': '$', '5': '%', '6': '^', '7': '&', '8': '*', '9': '(',
+            '0': ')',
+            '-': '_', '=': '+', '[': '{', ']': '}', '\\': '|', ';': ':', '\'': '"', ',': '<', '.': '>', '/': '?'
+        }
 
-            self.caps_lock_on = False
-            self.shift_on = False
-            self.create_keyboard()
+        self.caps_lock_on = False
+        self.shift_on = False
+        self.create_keyboard()
 
-            self.on_enter_callback = on_enter_callback
+        self.on_enter_callback = on_enter_callback
 
     def create_keyboard(self):
-            for row_index, row in enumerate(self.keys, start=1):
-                for col_index, key in enumerate(row):
-                    button = tk.Button(self, text=key, width=5, height=2, command=lambda k=key: self.press_key(k))
-                    button.grid(row=row_index, column=col_index, padx=2, pady=2)
+        for row_index, row in enumerate(self.keys, start=1):
+            for col_index, key in enumerate(row):
+                button = tk.Button(
+                    self, text=key, width=5, height=2, command=lambda k=key: self.press_key(k))
+                button.grid(row=row_index, column=col_index, padx=2, pady=2)
 
     def press_key(self, key):
-            if key == 'Backspace':
-                self.input_var.set(self.input_var.get()[:-1])
-            elif key == 'Enter':
-                entered_text = self.input_var.get()
-                print(f"Input: {entered_text}")
-                self.input_var.set('')
-                self.destroy()
-                self.on_enter_callback(entered_text)
-            elif key == 'Caps Lock':
-                self.caps_lock_on = not self.caps_lock_on
-            elif key == 'Shift':
-                self.shift_on = not self.shift_on
-                return
-            elif key not in ('Ctrl', 'Alt', 'Tab'):
-                if self.shift_on:
-                    key = self.shift_mappings.get(key, key.upper())
-                    self.shift_on = False
+        if key == 'Backspace':
+            self.input_var.set(self.input_var.get()[:-1])
+        elif key == 'Enter':
+            entered_text = self.input_var.get()
+            print(f"Input: {entered_text}")
+            self.input_var.set('')
+            self.destroy()
+            self.on_enter_callback(entered_text)
+        elif key == 'Caps Lock':
+            self.caps_lock_on = not self.caps_lock_on
+        elif key == 'Shift':
+            self.shift_on = not self.shift_on
+            return
+        elif key not in ('Ctrl', 'Alt', 'Tab'):
+            if self.shift_on:
+                key = self.shift_mappings.get(key, key.upper())
+                self.shift_on = False
 
-                char = key.upper() if self.caps_lock_on and key.isalpha() else key
-                self.input_var.set(self.input_var.get() + char)
+            char = key.upper() if self.caps_lock_on and key.isalpha() else key
+            self.input_var.set(self.input_var.get() + char)
     pass
-from PyQt5.QtCore import QObject, pyqtSignal
+
 
 class SharedData(QObject):
 
@@ -86,6 +95,7 @@ class SharedData(QObject):
         self._time = None
         self._date = QDate.currentDate().toString("yyyy-MM-dd")
         self._time = QTime.currentTime().toString()
+
     @property
     def date(self):
         return self._date
@@ -103,6 +113,7 @@ class SharedData(QObject):
     def time(self, value):
         self._time = value
         self.time_updated.emit(value)
+
     def set_system_time(self, date, time):
         self.date = date.toString()
         self.time = time.toString()
@@ -111,57 +122,102 @@ class SharedData(QObject):
         current_time = QTime.fromString(self.time)
         current_time = current_time.addSecs(1)
         self.time = current_time.toString()
+
+
 def update_shared_data_time():
     shared_data.update_time()
+
+
 shared_data = SharedData()
 
+
 class SettingWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, stacked_widget):
         super().__init__()
         loadUi('Ready.ui', self)
 
+        self.stacked_widget = stacked_widget
         self.setting.clicked.connect(self.open_next)
         self.connection.clicked.connect(self.open_connection)
-
-
         self.work.clicked.connect(self.open_work)
+        
+        # Set the path to the directory you want to check
+        directory_path = '/var/spool/cups-pdf/ANONYMOUS/'
+        
+        open_settings_window1 = False
+
+        while open_settings_window1 is not True:
+            # List the contents of the directory
+            contents = os.listdir(directory_path)
+            time.sleep(0.5)
+
+            # Check if the directory is not empty
+            if contents:
+                open_settings_window1 = True
+                for item in contents:
+                    # Check if the item is a file (not a directory)
+                    if os.path.isfile(os.path.join(directory_path, item)):
+                        print(item)
+            else:
+                open_settings_window1 = False
+
+        if open_settings_window1:
+            self.SettingsWindow1_window = SettingsWindow1(self.stacked_widget)
+            self.stacked_widget.addWidget(self.SettingsWindow1_window)
+            self.stacked_widget.setCurrentWidget(self.SettingsWindow1_window)
+            self.stacked_widget.removeWidget(self)
+        
+    def SettingsWindow1_window(self):
+        self.hide()
+        self.SettingsWindow1.show()
 
     def open_next(self):
         self.usb_window = USBWindow()
         self.usb_window.showFullScreen()
         self.hide()
+
     def next_settings(self):
         self.settings_window = SettingsWindow1(self)
         self.settings_window.showFullScreen()
         self.hide()
+
     def open_connection(self):
         self.connection_window = connectionWindow()
         self.connection_window.showFullScreen()
         self.hide()
+
     def open_work(self):
         self.work_window = workWindow()
         self.work_window.showFullScreen()
         self.hide()
+
+
 class connectionWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         loadUi('connection.ui', self)
 
         self.back.clicked.connect(self.go_back)
+
     def go_back(self):
         self.setting_window = SettingWindow()
         self.setting_window.showFullScreen()
         self.hide()
+
+
 class workWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         loadUi('Work.ui', self)
 
         self.back.clicked.connect(self.go_back)
+
     def go_back(self):
         self.setting_window = SettingWindow()
         self.setting_window.showFullScreen()
         self.hide()
+
+
 class USBWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -186,6 +242,7 @@ class USBWindow(QMainWindow):
         # Show the existing wifi_window instance
         self.wifi_window.showFullScreen()
         self.hide()
+
     def go_back(self):
         self.setting_window = SettingWindow()
         self.setting_window.showFullScreen()
@@ -200,6 +257,7 @@ class USBWindow(QMainWindow):
         self.about_window = aboutWindow()
         self.about_window.showFullScreen()
         self.hide()
+
     def open_rs(self):
         self.usb_window = RSWindow()
         self.usb_window.showFullScreen()
@@ -209,11 +267,11 @@ class USBWindow(QMainWindow):
         self.usb_window = usbWindow()
         self.usb_window.showFullScreen()
         self.hide()
+
     def open_bluetooth(self):
         self.usb_window = bluetoothWindow()
         self.usb_window.showFullScreen()
         self.hide()
-
 
 
 class aboutWindow(QMainWindow):
@@ -223,11 +281,12 @@ class aboutWindow(QMainWindow):
 
         self.back.clicked.connect(self.go_back)
 
-
     def go_back(self):
         self.setting_window = SettingWindow()
         self.setting_window.showFullScreen()
         self.hide()
+
+
 class WifiWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -235,8 +294,8 @@ class WifiWindow(QMainWindow):
 
         self.back.clicked.connect(self.go_back)
 
-
-        self.password.clicked.connect(lambda: self.open_virtual_keyboard(self.textEdit1))
+        self.password.clicked.connect(
+            lambda: self.open_virtual_keyboard(self.textEdit1))
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
@@ -250,8 +309,7 @@ class WifiWindow(QMainWindow):
             line = line.strip()
             if "ESSID" in line:
                 networks.append(line.split(":")[1].strip('"'))
-        
-        print("Available WiFi networks:")
+
         for network in networks:
             self.ssid.addItems(["{network}"])
 
@@ -260,6 +318,7 @@ class WifiWindow(QMainWindow):
 
     def on_combobox_activated(self, text):
         print(f"Selected option: {text}")
+
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
@@ -274,25 +333,32 @@ class WifiWindow(QMainWindow):
         text_edit.setPlainText(entered_text)
 
     def open_virtual_keyboard(self, text_edit):
-        virtual_keyboard = VirtualKeyboard(lambda entered_text: self.update_text_edit(text_edit, entered_text))
+        virtual_keyboard = VirtualKeyboard(
+            lambda entered_text: self.update_text_edit(text_edit, entered_text))
         virtual_keyboard.mainloop()
+
+
 class RSWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         loadUi('RSset.ui', self)
 
         self.back.clicked.connect(self.go_back)
-        self.address.clicked.connect(lambda: self.open_virtual_keyboard(self.textEdit))
+        self.address.clicked.connect(
+            lambda: self.open_virtual_keyboard(self.textEdit))
         self.baudrate.addItems(["9600", "19200", "38400", "115200"])
         self.parity.addItems(["None", "Even", "Odd"])
         # Connect the combo box's activated signal to a slot function
         self.baudrate.activated[str].connect(self.on_combobox_activated)
 
         self.parity.activated[str].connect(self.on_combobox_activated1)
+
     def on_combobox_activated(self, text):
         print(f"Selected option: {text}")
+
     def on_combobox_activated1(self, text):
         print(f"Selected option: {text}")
+
     def go_back(self):
         self.setting_window = SettingWindow()
         self.setting_window.showFullScreen()
@@ -302,8 +368,11 @@ class RSWindow(QMainWindow):
         text_edit.setPlainText(entered_text)
 
     def open_virtual_keyboard(self, text_edit):
-        virtual_keyboard = VirtualKeyboard(lambda entered_text: self.update_text_edit(text_edit, entered_text))
+        virtual_keyboard = VirtualKeyboard(
+            lambda entered_text: self.update_text_edit(text_edit, entered_text))
         virtual_keyboard.mainloop()
+
+
 class usbWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -318,7 +387,6 @@ class usbWindow(QMainWindow):
     def on_combobox_activated(self, text):
         print(f"Selected option: {text}")
 
-
     def go_back(self):
         self.setting_window = SettingWindow()
         self.setting_window.showFullScreen()
@@ -330,6 +398,8 @@ class usbWindow(QMainWindow):
     def open_virtual_keyboard(self):
         virtual_keyboard = VirtualKeyboard(self.update_text_edit)
         virtual_keyboard.mainloop()
+
+
 class bluetoothWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -344,12 +414,10 @@ class bluetoothWindow(QMainWindow):
     def on_combobox_activated(self, text):
         print(f"Selected option: {text}")
 
-
     def go_back(self):
         self.setting_window = SettingWindow()
         self.setting_window.showFullScreen()
         self.hide()
-
 
     def update_text_edit(self, entered_text):
         self.textEdit.setPlainText(entered_text)
@@ -358,21 +426,25 @@ class bluetoothWindow(QMainWindow):
         virtual_keyboard = VirtualKeyboard(self.update_text_edit)
         virtual_keyboard.mainloop()
 # Define similar classes for WifiWindow, RsWindow, and SetWindow
+
+
 class SettingsWindow1(QMainWindow, Ui_MainWindow3):
-    def __init__(self, parent):
+    def __init__(self, stacked_widget):
         super().__init__()
-        self.parent = parent
+        self.stacked_widget = stacked_widget
         self.setupUi(self)
         self.next1.clicked.connect(self.open_keyboard)
-
         self.Retreive.clicked.connect(self.next_settings5)
+
     def open_keyboard(self):
         self.settings_window = NumericKeyboard(self)
         self.settings_window.showFullScreen()
+
     def next_settings5(self):
         proc2 = subprocess.Popen(["python", "s5.py"])
         time.sleep(10)
         proc2.terminate()
+
 
 class NumericKeyboard(QMainWindow, Ui_MainWindow4):
 
@@ -400,7 +472,6 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
 
         self.cross.clicked.connect(self.destroy)
 
-
     def add_number(self, number):
         current_text = self.textEdit.toPlainText()
         new_text = current_text + number
@@ -418,13 +489,22 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
         proc2 = subprocess.Popen(["python", "s6.py"])
         time.sleep(10)
         proc2.terminate()
+
     def get_saved_value(self):
-            return self.saved_value
+        return self.saved_value
+
     def destroy(self):
-            self.hide()
+        self.hide()
+
+
+class MyApp(QApplication):
+    def __init__(self):
+        super().__init__(sys.argv)
+        self.stacked_widget = QStackedWidget()
+        self.setting_window = SettingWindow(self.stacked_widget)
+        self.stacked_widget.addWidget(self.setting_window)
+        self.stacked_widget.showFullScreen()
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = SettingWindow()
-    window.showFullScreen()
+    app = MyApp()
     sys.exit(app.exec_())

@@ -19,7 +19,6 @@ proc1 = subprocess.Popen(["python", "progress bar.py"])
 time.sleep(1)
 proc1.terminate()
 
-
 class VirtualKeyboard(tk.Tk):
 
     def __init__(self, on_enter_callback):
@@ -132,7 +131,7 @@ shared_data = SharedData()
 
 
 class SettingWindow(QMainWindow):
-    def __init__(self, stacked_widget, open_settings_window1):
+    def __init__(self, stacked_widget):
         super().__init__()
         loadUi('Ready.ui', self)
 
@@ -141,18 +140,8 @@ class SettingWindow(QMainWindow):
         self.connection.clicked.connect(self.open_connection)
         self.work.clicked.connect(self.open_work)
 
-        if open_settings_window1:
-            self.SettingsWindow1_window = SettingsWindow1(self.stacked_widget)
-            self.stacked_widget.addWidget(self.SettingsWindow1_window)
-            self.stacked_widget.setCurrentWidget(self.SettingsWindow1_window)
-            self.stacked_widget.removeWidget(self)
-        
-    def SettingsWindow1_window(self):
-        self.hide()
-        self.SettingsWindow1.show()
-
     def open_next(self):
-        self.usb_window = USBWindow()
+        self.usb_window = USBWindow(self.stacked_widget)
         self.usb_window.showFullScreen()
         self.hide()
 
@@ -162,47 +151,51 @@ class SettingWindow(QMainWindow):
         self.hide()
 
     def open_connection(self):
-        self.connection_window = connectionWindow()
+        self.connection_window = connectionWindow(self.stacked_widget)
         self.connection_window.showFullScreen()
         self.hide()
 
     def open_work(self):
-        self.work_window = workWindow()
+        self.work_window = workWindow(self.stacked_widget)
         self.work_window.showFullScreen()
         self.hide()
 
 
 class connectionWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = stacked_widget
         loadUi('connection.ui', self)
 
         self.back.clicked.connect(self.go_back)
 
     def go_back(self):
-        self.setting_window = SettingWindow()
+        self.setting_window = SettingWindow(self.stacked_widget)
         self.setting_window.showFullScreen()
         self.hide()
 
 
 class workWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = stacked_widget
         loadUi('Work.ui', self)
 
         self.back.clicked.connect(self.go_back)
 
     def go_back(self):
-        self.setting_window = SettingWindow()
+        self.setting_window = SettingWindow(self.stacked_widget)
         self.setting_window.showFullScreen()
         self.hide()
 
 
 class USBWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, stacked_widget):
         super().__init__()
         loadUi('inset.ui', self)
-        self.wifi_window = WifiWindow()
+
+        self.stacked_widget = stacked_widget
+        self.wifi_window = WifiWindow(self.stacked_widget)
         self.back.clicked.connect(self.go_back)
         self.usb.clicked.connect(self.open_usb)
         self.bluetooth.clicked.connect(self.open_bluetooth)
@@ -224,12 +217,13 @@ class USBWindow(QMainWindow):
         self.hide()
 
     def go_back(self):
-        self.setting_window = SettingWindow()
+        self.setting_window = SettingWindow(self.stacked_widget)
         self.setting_window.showFullScreen()
         self.hide()
 
     def open_wifi(self):
-        self.usb_window = WifiWindow()
+        # Pass 'self.stacked_widget' as an argument when creating a new WifiWindow instance
+        self.usb_window = WifiWindow(self.stacked_widget)
         self.usb_window.showFullScreen()
         self.hide()
 
@@ -239,17 +233,17 @@ class USBWindow(QMainWindow):
         self.hide()
 
     def open_rs(self):
-        self.usb_window = RSWindow()
-        self.usb_window.showFullScreen()
+        self.rs_window = RSWindow(self.stacked_widget)
+        self.rs_window.showFullScreen()
         self.hide()
 
     def open_usb(self):
-        self.usb_window = usbWindow()
+        self.usb_window = usbWindow(self.stacked_widget)
         self.usb_window.showFullScreen()
         self.hide()
 
     def open_bluetooth(self):
-        self.usb_window = bluetoothWindow()
+        self.usb_window = bluetoothWindow(self.stacked_widget)
         self.usb_window.showFullScreen()
         self.hide()
 
@@ -262,15 +256,17 @@ class aboutWindow(QMainWindow):
         self.back.clicked.connect(self.go_back)
 
     def go_back(self):
-        self.setting_window = SettingWindow()
+        self.setting_window = SettingWindow(self.stacked_widget)
         self.setting_window.showFullScreen()
         self.hide()
 
 
 class WifiWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, stacked_widget):
         super().__init__()
         loadUi('wifiset.ui', self)
+
+        self.stacked_widget = stacked_widget
 
         self.back.clicked.connect(self.go_back)
 
@@ -291,7 +287,7 @@ class WifiWindow(QMainWindow):
                 networks.append(line.split(":")[1].strip('"'))
 
         for network in networks:
-            self.ssid.addItems(["{network}"])
+            self.ssid.addItems({network})
 
         # Connect the combo box's activated signal to a slot function
         self.ssid.activated[str].connect(self.on_combobox_activated)
@@ -305,8 +301,8 @@ class WifiWindow(QMainWindow):
         self.date.setPlainText(f" {shared_data.date}")
 
     def go_back(self):
-        self.setting_window = SettingWindow()
-        self.setting_window.showFullScreen()
+        self.usb_window = USBWindow(self.stacked_widget)
+        self.usb_window.showFullScreen()
         self.hide()
 
     def update_text_edit(self, text_edit, entered_text):
@@ -319,8 +315,9 @@ class WifiWindow(QMainWindow):
 
 
 class RSWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = stacked_widget
         loadUi('RSset.ui', self)
 
         self.back.clicked.connect(self.go_back)
@@ -340,8 +337,8 @@ class RSWindow(QMainWindow):
         print(f"Selected option: {text}")
 
     def go_back(self):
-        self.setting_window = SettingWindow()
-        self.setting_window.showFullScreen()
+        self.usb_window = USBWindow(self.stacked_widget)
+        self.usb_window.showFullScreen()
         self.hide()
 
     def update_text_edit(self, text_edit, entered_text):
@@ -354,8 +351,9 @@ class RSWindow(QMainWindow):
 
 
 class usbWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = stacked_widget
         loadUi('usbset.ui', self)
 
         self.back.clicked.connect(self.go_back)
@@ -368,8 +366,8 @@ class usbWindow(QMainWindow):
         print(f"Selected option: {text}")
 
     def go_back(self):
-        self.setting_window = SettingWindow()
-        self.setting_window.showFullScreen()
+        self.usb_window = USBWindow(self.stacked_widget)
+        self.usb_window.showFullScreen()
         self.hide()
 
     def update_text_edit(self, entered_text):
@@ -381,8 +379,9 @@ class usbWindow(QMainWindow):
 
 
 class bluetoothWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = stacked_widget
         loadUi('bluetooth.ui', self)
 
         self.back.clicked.connect(self.go_back)
@@ -395,8 +394,8 @@ class bluetoothWindow(QMainWindow):
         print(f"Selected option: {text}")
 
     def go_back(self):
-        self.setting_window = SettingWindow()
-        self.setting_window.showFullScreen()
+        self.usb_window = USBWindow(self.stacked_widget)
+        self.usb_window.showFullScreen()
         self.hide()
 
     def update_text_edit(self, entered_text):
@@ -477,38 +476,44 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
         self.hide()
 
 
+class DirectoryChecker(QObject):
+    open_settings_window1_signal = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+
+    def check_directory(self):
+        directory_path = '/var/spool/cups-pdf/ANONYMOUS/'
+
+        contents = os.listdir(directory_path)
+
+        if contents:
+            self.open_settings_window1_signal.emit()
+
+
 class MyApp(QApplication):
     def __init__(self):
         super().__init__(sys.argv)
         self.stacked_widget = QStackedWidget()
-        
-        open_settings_window1 = False
-        
-        self.setting_window = SettingWindow(self.stacked_widget, open_settings_window1)
+
+        self.setting_window = SettingWindow(self.stacked_widget)
         self.stacked_widget.addWidget(self.setting_window)
         self.stacked_widget.showFullScreen()
-        
-        # Set the path to the directory you want to check
-        directory_path = '/var/spool/cups-pdf/ANONYMOUS/'
 
-        while open_settings_window1 is not True:
-            # List the contents of the directory
-            contents = os.listdir(directory_path)
-            time.sleep(0.5)
+        self.directory_checker = DirectoryChecker()
+        self.directory_checker.open_settings_window1_signal.connect(self.open_settings_window1)
 
-            # Check if the directory is not empty
-            if contents:
-                open_settings_window1 = True
-                self.setting_window = SettingWindow(self.stacked_widget, open_settings_window1)
-                self.stacked_widget.addWidget(self.setting_window)
-                self.stacked_widget.showFullScreen()
-                for item in contents:
-                    # Check if the item is a file (not a directory)
-                    if os.path.isfile(os.path.join(directory_path, item)):
-                        print(item)
-            else:
-                open_settings_window1 = False
-                
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.directory_checker.check_directory)
+        self.timer.start(500)
+
+    def open_settings_window1(self):
+        self.SettingsWindow1_window = SettingsWindow1(self.stacked_widget)
+        self.stacked_widget.addWidget(self.SettingsWindow1_window)
+        self.stacked_widget.setCurrentWidget(self.SettingsWindow1_window)
+        self.stacked_widget.removeWidget(self.setting_window)
+        self.timer.stop()
+
 
 if __name__ == '__main__':
     app = MyApp()

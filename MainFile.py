@@ -15,9 +15,16 @@ from RSset import Ui_RS485
 import subprocess
 from w3 import Ui_MainWindow3
 from W4 import Ui_MainWindow4
+
+import board
+import busio
+import serial
+from adafruit_pn532.i2c import PN532_I2C
+
 proc1 = subprocess.Popen(["python", "progress bar.py"])
 time.sleep(1)
 proc1.terminate()
+
 
 class VirtualKeyboard(tk.Tk):
 
@@ -145,11 +152,6 @@ class SettingWindow(QMainWindow):
         self.usb_window.showFullScreen()
         self.hide()
 
-    def next_settings(self):
-        self.settings_window = SettingsWindow1(self)
-        self.settings_window.showFullScreen()
-        self.hide()
-
     def open_connection(self):
         self.connection_window = connectionWindow(self.stacked_widget)
         self.connection_window.showFullScreen()
@@ -211,10 +213,10 @@ class USBWindow(QMainWindow):
         self.timeEdit.setTime(QTime.fromString(current_time))
         self.dateEdit.setDate(QDate.fromString(shared_data.date, "yyyy-MM-dd"))
 
-    def open_wifi(self):
-        # Show the existing wifi_window instance
-        self.wifi_window.showFullScreen()
-        self.hide()
+    # def open_wifi(self):
+    #     # Show the existing wifi_window instance
+    #     self.wifi_window.showFullScreen()
+    #     self.hide()
 
     def go_back(self):
         self.setting_window = SettingWindow(self.stacked_widget)
@@ -404,16 +406,82 @@ class bluetoothWindow(QMainWindow):
     def open_virtual_keyboard(self):
         virtual_keyboard = VirtualKeyboard(self.update_text_edit)
         virtual_keyboard.mainloop()
+
+
 # Define similar classes for WifiWindow, RsWindow, and SetWindow
-
-
 class SettingsWindow1(QMainWindow, Ui_MainWindow3):
-    def __init__(self, stacked_widget):
+    def __init__(self, stacked_widget, file_path):
         super().__init__()
         self.stacked_widget = stacked_widget
         self.setupUi(self)
+        self.file_path = file_path
         self.next1.clicked.connect(self.open_keyboard)
         self.Retreive.clicked.connect(self.next_settings5)
+        self.process()
+
+    def process(self):
+        print(self.file_path)
+        # Barcode
+        # Configure the serial port and baud rate
+        serial_port = "/dev/ttySC0"
+        baud_rate = 9600
+
+        # Command to be sent
+        start_scan_command = "7E 00 08 01 00 02 01 AB CD"
+        start_scan_command_bytes = bytes.fromhex(start_scan_command.replace(" ", ""))
+        start_stop_command = "7E 00 08 01 00 02 00 AB CD"
+        start_stop_command_bytes = bytes.fromhex(start_stop_command.replace(" ", ""))
+
+        # PN532
+        # Configure the PN532 connection
+        i2c = busio.I2C(board.SCL, board.SDA)
+        pn532 = PN532_I2C(i2c, debug=False)
+        ic, ver, rev, support = pn532.firmware_version
+        print("Found PN532 with firmware version: {0}.{1}".format(ver, rev))
+
+        # Configure PN532 to communicate with RFID cards
+        pn532.SAM_configuration()
+
+        scanned = False
+        scanned_data = ""
+        # Open the serial port
+        with serial.Serial(serial_port, baud_rate, timeout=1) as ser:
+            print(f"Connected to {serial_port} at {baud_rate} baud rate.")
+
+            # Send the start scan command
+            ser.write(start_scan_command_bytes)
+
+            while scanned is not True:
+                # Read data from the serial port
+                data_bytes = ser.readline()
+                data = data_bytes[-2:].decode("utf-8").strip()
+
+                # If data is received, print it and exit the loop
+                while data != "31":
+                    # Read data from the serial port
+                    data = ser.readline().decode("utf-8").strip()
+                    # If data is received, print it
+                    if data:
+                        print(f"Received data: {data}")
+                        scanned_data = data
+                        scanned = True
+                        # Send the stop scan command
+                        ser.write(start_stop_command_bytes)
+                        break
+                        
+                    print("Scanning RFID and Barcode...")
+                    uid = pn532.read_passive_target(timeout=0.5)
+                    if uid is not None:
+                        uid_string = ''.join([hex(i)[2:].zfill(2) for i in uid])  # Convert UID to a string
+                        print("Found an RFID card with UID:", uid_string)
+                        scanned_data = uid_string
+                        scanned = True
+                        # Send the stop scan command
+                        ser.write(start_stop_command_bytes)
+                        break
+                        
+                    # Wait for a short period before reading the next data
+                    time.sleep(0.1)
 
     def open_keyboard(self):
         self.settings_window = NumericKeyboard(self)
@@ -481,13 +549,20 @@ class DirectoryChecker(QObject):
 
     def __init__(self):
         super().__init__()
+        self.path_data = ""  # Initialize path_data with an empty string
 
     def check_directory(self):
         directory_path = '/var/spool/cups-pdf/ANONYMOUS/'
+        # directory_path = 'D:/DecasUI/DecasUI/ANONYMOUS/'
 
         contents = os.listdir(directory_path)
 
         if contents:
+            for content in contents:
+                file_path = os.path.join(directory_path, content)
+                if os.path.isfile(file_path):
+                    print(file_path)
+            self.path_data = file_path  # Update path_data with the last file_path
             self.open_settings_window1_signal.emit()
 
 
@@ -501,14 +576,17 @@ class MyApp(QApplication):
         self.stacked_widget.showFullScreen()
 
         self.directory_checker = DirectoryChecker()
-        self.directory_checker.open_settings_window1_signal.connect(self.open_settings_window1)
+        self.directory_checker.open_settings_window1_signal.connect(
+            self.open_settings_window1)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.directory_checker.check_directory)
         self.timer.start(500)
 
     def open_settings_window1(self):
-        self.SettingsWindow1_window = SettingsWindow1(self.stacked_widget)
+        file_path = self.directory_checker.path_data
+        self.SettingsWindow1_window = SettingsWindow1(
+            self.stacked_widget, file_path)
         self.stacked_widget.addWidget(self.SettingsWindow1_window)
         self.stacked_widget.setCurrentWidget(self.SettingsWindow1_window)
         self.stacked_widget.removeWidget(self.setting_window)

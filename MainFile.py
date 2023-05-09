@@ -449,17 +449,19 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
             serial_port, baud_rate, start_scan_command_bytes, start_stop_command_bytes, pn532)
 
         # Connect the signals to the appropriate slots
-        serial_reader_worker.data_received_signal.connect(handle_data_received)
-        serial_reader_worker.scanning_signal.connect(update_scanning_status)
+        serial_reader_worker.data_received_signal.connect(
+            self.handle_data_received)
+        serial_reader_worker.scanning_signal.connect(
+            self.update_scanning_status)
 
         # Start the worker thread
         serial_reader_worker.start()
 
-    def handle_data_received(data):
+    def handle_data_received(self, data):
         # Process the received data
         print(f"Data received in the main thread: {data}")
 
-    def update_scanning_status():
+    def update_scanning_status(self):
         print("Scanning RFID and Barcode...")
 
     def open_keyboard(self):

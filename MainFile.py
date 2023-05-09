@@ -418,51 +418,7 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.next1.clicked.connect(self.open_keyboard)
         self.Retreive.clicked.connect(self.next_settings5)
         self.timer = QTimer()
-        self.process()
-
-    def process(self):
-        print(self.file_path)
-        # Barcode
-        # Configure the serial port and baud rate
-        serial_port = "/dev/ttySC0"
-        baud_rate = 9600
-
-        # Command to be sent
-        start_scan_command = "7E 00 08 01 00 02 01 AB CD"
-        start_scan_command_bytes = bytes.fromhex(
-            start_scan_command.replace(" ", ""))
-        start_stop_command = "7E 00 08 01 00 02 00 AB CD"
-        start_stop_command_bytes = bytes.fromhex(
-            start_stop_command.replace(" ", ""))
-
-        # PN532
-        # Configure the PN532 connection
-        i2c = busio.I2C(board.SCL, board.SDA)
-        pn532 = PN532_I2C(i2c, debug=False)
-        ic, ver, rev, support = pn532.firmware_version
-        print("Found PN532 with firmware version: {0}.{1}".format(ver, rev))
-
-        # Configure PN532 to communicate with RFID cards
-        pn532.SAM_configuration()
-        # Instantiate the SerialReaderWorker with appropriate arguments
-        serial_reader_worker = SerialReaderWorker(
-            serial_port, baud_rate, start_scan_command_bytes, start_stop_command_bytes, pn532)
-
-        # Connect the signals to the appropriate slots
-        serial_reader_worker.data_received_signal.connect(
-            self.handle_data_received)
-        serial_reader_worker.scanning_signal.connect(
-            self.update_scanning_status)
-
-        # Start the worker thread
-        serial_reader_worker.start()
-
-    def handle_data_received(self, data):
-        # Process the received data
-        print(f"Data received in the main thread: {data}")
-
-    def update_scanning_status(self):
-        print("Scanning RFID and Barcode...")
+        my_auth_process()
 
     def open_keyboard(self):
         self.settings_window = NumericKeyboard(self)
@@ -595,6 +551,52 @@ class DirectoryChecker(QObject):
                     print(file_path)
             self.path_data = file_path  # Update path_data with the last file_path
             self.open_settings_window1_signal.emit()
+
+
+class my_auth_process(QApplication):
+    def __init__(self):
+        print(self.file_path)
+        # Barcode
+        # Configure the serial port and baud rate
+        serial_port = "/dev/ttySC0"
+        baud_rate = 9600
+
+        # Command to be sent
+        start_scan_command = "7E 00 08 01 00 02 01 AB CD"
+        start_scan_command_bytes = bytes.fromhex(
+            start_scan_command.replace(" ", ""))
+        start_stop_command = "7E 00 08 01 00 02 00 AB CD"
+        start_stop_command_bytes = bytes.fromhex(
+            start_stop_command.replace(" ", ""))
+
+        # PN532
+        # Configure the PN532 connection
+        i2c = busio.I2C(board.SCL, board.SDA)
+        pn532 = PN532_I2C(i2c, debug=False)
+        ic, ver, rev, support = pn532.firmware_version
+        print("Found PN532 with firmware version: {0}.{1}".format(ver, rev))
+
+        # Configure PN532 to communicate with RFID cards
+        pn532.SAM_configuration()
+        # Instantiate the SerialReaderWorker with appropriate arguments
+        serial_reader_worker = SerialReaderWorker(
+            serial_port, baud_rate, start_scan_command_bytes, start_stop_command_bytes, pn532)
+
+        # Connect the signals to the appropriate slots
+        serial_reader_worker.data_received_signal.connect(
+            self.handle_data_received)
+        serial_reader_worker.scanning_signal.connect(
+            self.update_scanning_status)
+
+        # Start the worker thread
+        serial_reader_worker.start()
+
+    def handle_data_received(self, data):
+        # Process the received data
+        print(f"Data received in the main thread: {data}")
+
+    def update_scanning_status(self):
+        print("Scanning RFID and Barcode...")
 
 
 class MyApp(QApplication):

@@ -1,9 +1,9 @@
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
 import sys
 import os
 import subprocess
 import tkinter as tk
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget
 from PyQt5.uic import loadUi
 import time
 from PyQt5.QtCore import QTimer, QTime, QDate
@@ -417,6 +417,7 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.file_path = file_path
         self.next1.clicked.connect(self.open_keyboard)
         self.Retreive.clicked.connect(self.next_settings5)
+        self.timer = QTimer()
         self.process()
 
     def process(self):
@@ -428,9 +429,11 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
 
         # Command to be sent
         start_scan_command = "7E 00 08 01 00 02 01 AB CD"
-        start_scan_command_bytes = bytes.fromhex(start_scan_command.replace(" ", ""))
+        start_scan_command_bytes = bytes.fromhex(
+            start_scan_command.replace(" ", ""))
         start_stop_command = "7E 00 08 01 00 02 00 AB CD"
-        start_stop_command_bytes = bytes.fromhex(start_stop_command.replace(" ", ""))
+        start_stop_command_bytes = bytes.fromhex(
+            start_stop_command.replace(" ", ""))
 
         # PN532
         # Configure the PN532 connection
@@ -441,47 +444,23 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
 
         # Configure PN532 to communicate with RFID cards
         pn532.SAM_configuration()
+        # Instantiate the SerialReaderWorker with appropriate arguments
+        serial_reader_worker = SerialReaderWorker(
+            serial_port, baud_rate, start_scan_command_bytes, start_stop_command_bytes, pn532)
 
-        scanned = False
-        scanned_data = ""
-        # Open the serial port
-        with serial.Serial(serial_port, baud_rate, timeout=1) as ser:
-            print(f"Connected to {serial_port} at {baud_rate} baud rate.")
+        # Connect the signals to the appropriate slots
+        serial_reader_worker.data_received_signal.connect(handle_data_received)
+        serial_reader_worker.scanning_signal.connect(update_scanning_status)
 
-            # Send the start scan command
-            ser.write(start_scan_command_bytes)
+        # Start the worker thread
+        serial_reader_worker.start()
 
-            while scanned is not True:
-                # Read data from the serial port
-                data_bytes = ser.readline()
-                data = data_bytes[-2:].decode("utf-8").strip()
+    def handle_data_received(data):
+        # Process the received data
+        print(f"Data received in the main thread: {data}")
 
-                # If data is received, print it and exit the loop
-                while data != "31":
-                    # Read data from the serial port
-                    data = ser.readline().decode("utf-8").strip()
-                    # If data is received, print it
-                    if data:
-                        print(f"Received data: {data}")
-                        scanned_data = data
-                        scanned = True
-                        # Send the stop scan command
-                        ser.write(start_stop_command_bytes)
-                        break
-                        
-                    print("Scanning RFID and Barcode...")
-                    uid = pn532.read_passive_target(timeout=0.5)
-                    if uid is not None:
-                        uid_string = ''.join([hex(i)[2:].zfill(2) for i in uid])  # Convert UID to a string
-                        print("Found an RFID card with UID:", uid_string)
-                        scanned_data = uid_string
-                        scanned = True
-                        # Send the stop scan command
-                        ser.write(start_stop_command_bytes)
-                        break
-                        
-                    # Wait for a short period before reading the next data
-                    time.sleep(0.1)
+    def update_scanning_status():
+        print("Scanning RFID and Barcode...")
 
     def open_keyboard(self):
         self.settings_window = NumericKeyboard(self)
@@ -542,6 +521,56 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
 
     def destroy(self):
         self.hide()
+
+
+class SerialReaderWorker(QThread):
+    data_received_signal = pyqtSignal(str)
+    scanning_signal = pyqtSignal()
+
+    def __init__(self, serial_port, baud_rate, start_scan_command_bytes, start_stop_command_bytes, pn532):
+        super().__init__()
+        self.serial_port = serial_port
+        self.baud_rate = baud_rate
+        self.start_scan_command_bytes = start_scan_command_bytes
+        self.start_stop_command_bytes = start_stop_command_bytes
+        self.pn532 = pn532
+
+    def run(self):
+        scanned = False
+        scanned_data = ""
+
+        with serial.Serial(self.serial_port, self.baud_rate, timeout=1) as ser:
+            print(
+                f"Connected to {self.serial_port} at {self.baud_rate} baud rate.")
+            ser.write(self.start_scan_command_bytes)
+
+            while not scanned:
+                data_bytes = ser.readline()
+                data = data_bytes[-2:].decode("utf-8").strip()
+
+                while data != "31":
+                    data = ser.readline().decode("utf-8").strip()
+                    if data:
+                        print(f"Received data: {data}")
+                        scanned_data = data
+                        scanned = True
+                        ser.write(self.start_stop_command_bytes)
+                        break
+
+                    self.scanning_signal.emit()
+                    uid = self.pn532.read_passive_target(timeout=0.5)
+                    if uid is not None:
+                        uid_string = ''.join(
+                            [hex(i)[2:].zfill(2) for i in uid])
+                        print("Found an RFID card with UID:", uid_string)
+                        scanned_data = uid_string
+                        scanned = True
+                        ser.write(self.start_stop_command_bytes)
+                        break
+
+                    time.sleep(0.1)
+
+        self.data_received_signal.emit(scanned_data)
 
 
 class DirectoryChecker(QObject):

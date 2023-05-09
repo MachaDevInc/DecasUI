@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal, QThread
 import sys
 import os
 import subprocess
@@ -409,6 +409,36 @@ class bluetoothWindow(QMainWindow):
 
 
 # Define similar classes for WifiWindow, RsWindow, and SetWindow
+class ScanThread(QThread):
+    foundUserID = pyqtSignal(str)
+
+    def __init__(self, ser, pn532, start_stop_command_bytes):
+        super().__init__()
+        self.ser = ser
+        self.pn532 = pn532
+        self.start_stop_command_bytes = start_stop_command_bytes
+        self.scanned = False
+
+    def run(self):
+        while not self.scanned:
+            data_bytes = self.ser.readline()
+            data = data_bytes[-2:].decode("utf-8").strip()
+
+            if data != "31":
+                data = self.ser.readline().decode("utf-8").strip()
+                if data:
+                    self.foundUserID.emit(data)
+                    self.scanned = True
+                    self.ser.write(self.start_stop_command_bytes)
+
+                uid = self.pn532.read_passive_target(timeout=0.1)  
+                if uid is not None:
+                    uid_string = ''.join([hex(i)[2:].zfill(2) for i in uid])
+                    self.foundUserID.emit(uid_string)
+                    self.scanned = True
+                    self.ser.write(self.start_stop_command_bytes)
+
+
 class SettingsWindow1(QMainWindow, Ui_MainWindow3):
     def __init__(self, stacked_widget, file_path):
         super().__init__()
@@ -419,61 +449,27 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.Retreive.clicked.connect(self.next_settings5)
 
         # Barcode
-        # Configure the serial port and baud rate
         self.serial_port = "/dev/ttySC0"
         self.baud_rate = 9600
-
-        # Command to be sent
         start_scan_command = "7E 00 08 01 00 02 01 AB CD"
         self.start_scan_command_bytes = bytes.fromhex(start_scan_command.replace(" ", ""))
         start_stop_command = "7E 00 08 01 00 02 00 AB CD"
         self.start_stop_command_bytes = bytes.fromhex(start_stop_command.replace(" ", ""))
 
         # PN532
-        # Configure the PN532 connection
         i2c = busio.I2C(board.SCL, board.SDA)
         self.pn532 = PN532_I2C(i2c, debug=False)
-        ic, ver, rev, support = self.pn532.firmware_version
-
-        # Configure PN532 to communicate with RFID cards
         self.pn532.SAM_configuration()
 
-        self.scanned = False
-        # Open the serial port
-        self.ser = serial.Serial(self.serial_port, self.baud_rate, timeout=0.5) # Reduced timeout
+        self.ser = serial.Serial(self.serial_port, self.baud_rate, timeout=0.5)
         self.ser.write(self.start_scan_command_bytes)
 
-        if not self.scanned:
-            self.timer = QTimer()
-            self.timer.timeout.connect(self.process)
-            self.timer.start(10)
+        self.scanThread = ScanThread(self.ser, self.pn532, self.start_stop_command_bytes)
+        self.scanThread.foundUserID.connect(self.processUserID)
+        self.scanThread.start()
 
-    def process(self):
-        print("2\n")
-        scanned_data = ""
-        data_bytes = self.ser.readline()
-        data = data_bytes[-2:].decode("utf-8").strip()
-
-        if data != "31":
-            data = self.ser.readline().decode("utf-8").strip()
-            if data:
-                print(f"Received data: {data}")
-                scanned_data = data
-                self.scanned = True
-                self.ser.write(self.start_stop_command_bytes)
-
-            print("Scanning RFID and Barcode...")
-            uid = self.pn532.read_passive_target(timeout=0.1)  # Reduced timeout
-            if uid is not None:
-                uid_string = ''.join([hex(i)[2:].zfill(2) for i in uid])  # Convert UID to a string
-                print("Found an RFID card with UID:", uid_string)
-                scanned_data = uid_string
-                self.scanned = True
-                self.ser.write(self.start_stop_command_bytes)
-
-        if self.scanned:
-            self.timer.stop()
-            print("Found a User ID:", scanned_data)
+    def processUserID(self, scanned_data):
+        print("Found a User ID:", scanned_data)
 
     def open_keyboard(self):
         self.settings_window = NumericKeyboard(self)

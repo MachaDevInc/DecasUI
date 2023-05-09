@@ -417,13 +417,7 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.file_path = file_path
         self.next1.clicked.connect(self.open_keyboard)
         self.Retreive.clicked.connect(self.next_settings5)
-        # self.process()
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.process)
-        self.timer.start(100)
 
-    def process(self):
-        # print(self.file_path)
         # Barcode
         # Configure the serial port and baud rate
         serial_port = "/dev/ttySC0"
@@ -456,19 +450,12 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
             ser.write(start_scan_command_bytes)
 
             if scanned is not True:
-                self.timer1 = QTimer()
-                self.timer1.timeout.connect(lambda: self.process1(
+                self.timer = QTimer()
+                self.timer.timeout.connect(lambda: self.process(
                     serial_port, baud_rate, pn532, start_stop_command_bytes, scanned))
-                self.timer1.start(20)
+                self.timer.start(10)
 
-    def process1(self, serial_port, baud_rate, pn532, start_stop_command_bytes, scanned):
-        print("1\n")
-        self.timer2 = QTimer()
-        self.timer2.timeout.connect(lambda: self.process2(
-            serial_port, baud_rate, pn532, start_stop_command_bytes, scanned))
-        self.timer2.start(5)
-
-    def process2(self, serial_port, baud_rate, pn532, start_stop_command_bytes, scanned):
+    def process(self, serial_port, baud_rate, pn532, start_stop_command_bytes, scanned):
         print("2\n")
         scanned_data = ""
         with serial.Serial(serial_port, baud_rate, timeout=1) as ser:
@@ -503,8 +490,6 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
                 time.sleep(0.01)
         if scanned:
             self.timer.stop()
-            self.timer1.stop()
-            self.timer2.stop()
             print("Found a User ID:", scanned_data)
 
     def open_keyboard(self):

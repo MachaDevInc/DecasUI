@@ -420,75 +420,58 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
 
         # Barcode
         # Configure the serial port and baud rate
-        serial_port = "/dev/ttySC0"
-        baud_rate = 9600
+        self.serial_port = "/dev/ttySC0"
+        self.baud_rate = 9600
 
         # Command to be sent
         start_scan_command = "7E 00 08 01 00 02 01 AB CD"
-        start_scan_command_bytes = bytes.fromhex(
-            start_scan_command.replace(" ", ""))
+        self.start_scan_command_bytes = bytes.fromhex(start_scan_command.replace(" ", ""))
         start_stop_command = "7E 00 08 01 00 02 00 AB CD"
-        start_stop_command_bytes = bytes.fromhex(
-            start_stop_command.replace(" ", ""))
+        self.start_stop_command_bytes = bytes.fromhex(start_stop_command.replace(" ", ""))
 
         # PN532
         # Configure the PN532 connection
         i2c = busio.I2C(board.SCL, board.SDA)
-        pn532 = PN532_I2C(i2c, debug=False)
-        ic, ver, rev, support = pn532.firmware_version
-        # print("Found PN532 with firmware version: {0}.{1}".format(ver, rev))
+        self.pn532 = PN532_I2C(i2c, debug=False)
+        ic, ver, rev, support = self.pn532.firmware_version
 
         # Configure PN532 to communicate with RFID cards
-        pn532.SAM_configuration()
+        self.pn532.SAM_configuration()
 
-        scanned = False
+        self.scanned = False
         # Open the serial port
-        with serial.Serial(serial_port, baud_rate, timeout=1) as ser:
-            # print(f"Connected to {serial_port} at {baud_rate} baud rate.")
+        self.ser = serial.Serial(self.serial_port, self.baud_rate, timeout=0.5) # Reduced timeout
+        self.ser.write(self.start_scan_command_bytes)
 
-            # Send the start scan command
-            ser.write(start_scan_command_bytes)
+        if not self.scanned:
+            self.timer = QTimer()
+            self.timer.timeout.connect(self.process)
+            self.timer.start(10)
 
-            if scanned is not True:
-                self.timer = QTimer()
-                self.timer.timeout.connect(lambda: self.process(
-                    serial_port, baud_rate, pn532, start_stop_command_bytes, scanned))
-                self.timer.start(10)
-
-    def process(self, serial_port, baud_rate, pn532, start_stop_command_bytes, scanned):
+    def process(self):
         print("2\n")
         scanned_data = ""
-        with serial.Serial(serial_port, baud_rate, timeout=1) as ser:
-            # Read data from the serial port
-            data_bytes = ser.readline()
-            data = data_bytes[-2:].decode("utf-8").strip()
+        data_bytes = self.ser.readline()
+        data = data_bytes[-2:].decode("utf-8").strip()
 
-            # If data is received, print it and exit the loop
-            if data != "31":
-                # Read data from the serial port
-                data = ser.readline().decode("utf-8").strip()
-                # If data is received, print it
-                if data:
-                    print(f"Received data: {data}")
-                    scanned_data = data
-                    scanned = True
-                    # Send the stop scan command
-                    ser.write(start_stop_command_bytes)
+        if data != "31":
+            data = self.ser.readline().decode("utf-8").strip()
+            if data:
+                print(f"Received data: {data}")
+                scanned_data = data
+                self.scanned = True
+                self.ser.write(self.start_stop_command_bytes)
 
-                print("Scanning RFID and Barcode...")
-                uid = pn532.read_passive_target(timeout=0.5)
-                if uid is not None:
-                    uid_string = ''.join([hex(i)[2:].zfill(2)
-                                          for i in uid])  # Convert UID to a string
-                    print("Found an RFID card with UID:", uid_string)
-                    scanned_data = uid_string
-                    scanned = True
-                    # Send the stop scan command
-                    ser.write(start_stop_command_bytes)
+            print("Scanning RFID and Barcode...")
+            uid = self.pn532.read_passive_target(timeout=0.1)  # Reduced timeout
+            if uid is not None:
+                uid_string = ''.join([hex(i)[2:].zfill(2) for i in uid])  # Convert UID to a string
+                print("Found an RFID card with UID:", uid_string)
+                scanned_data = uid_string
+                self.scanned = True
+                self.ser.write(self.start_stop_command_bytes)
 
-                # Wait for a short period before reading the next data
-                time.sleep(0.01)
-        if scanned:
+        if self.scanned:
             self.timer.stop()
             print("Found a User ID:", scanned_data)
 

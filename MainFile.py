@@ -838,7 +838,7 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
             self.success = self.parsed_data['success']
             self.firstname = self.parsed_data['firstname']
             self.lastname = self.parsed_data['lastname']
-            self.username.setPlainText(self.firstname + " " + self.lastname)
+            self.username.setText(self.firstname + " " + self.lastname)
 
             # Print the extracted values
             print(f"Success: {self.success}")
@@ -848,7 +848,7 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
         elif 'error' in self.parsed_data:
             self.error = self.parsed_data['error']
             self.response_message = self.parsed_data['response']
-            self.username.setPlainText("Number not found!!!")
+            self.username.setText("Number not found!!!")
 
             # Print the error message
             print(f"Error: {self.error}")

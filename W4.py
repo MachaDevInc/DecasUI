@@ -9,6 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
 
 
 class Ui_MainWindow4(object):
@@ -177,6 +178,7 @@ class Ui_MainWindow4(object):
         font = QtGui.QFont()
         font.setPointSize(24)
         font.setBold(True)
+        font.setWeight(75)
         self.textEdit.setFont(font)
         self.textEdit.setObjectName("textEdit")
         self.username = QtWidgets.QTextEdit(self.centralwidget)
@@ -195,16 +197,16 @@ class Ui_MainWindow4(object):
         font = QtGui.QFont()
         font.setPointSize(16)
         font.setBold(True)
+        font.setWeight(75)
+        self.username.setAlignment(Qt.AlignCenter)
         self.username.setFont(font)
         self.username.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.username.setLineWrapMode(QtWidgets.QTextEdit.WidgetWidth)
         self.username.setReadOnly(True)
-        self.username.setOverwriteMode(False)
-        self.username.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
         self.username.setObjectName("username")
         MainWindow4.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow4)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1024, 17))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1024, 21))
         self.menubar.setObjectName("menubar")
         MainWindow4.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow4)
@@ -217,14 +219,6 @@ class Ui_MainWindow4(object):
     def retranslateUi(self, MainWindow4):
         _translate = QtCore.QCoreApplication.translate
         MainWindow4.setWindowTitle(_translate("MainWindow4", "MainWindow"))
-        self.username.setHtml(_translate("MainWindow4", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"hr { height: 1px; border-width: 0; }\n"
-"li.unchecked::marker { content: \"\\2610\"; }\n"
-"li.checked::marker { content: \"\\2612\"; }\n"
-"</style></head><body style=\" font-family:\'Segoe UI\'; font-size:16pt; font-weight:700; font-style:normal;\">\n"
-"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
 
 
 if __name__ == "__main__":

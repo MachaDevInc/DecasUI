@@ -21,6 +21,15 @@ import busio
 import serial
 from adafruit_pn532.i2c import PN532_I2C
 
+import re
+import json
+import requests
+
+import sys
+import pytesseract
+import pdfplumber
+from pdf2image import convert_from_path
+
 proc1 = subprocess.Popen(["python", "progress bar.py"])
 time.sleep(1)
 proc1.terminate()
@@ -432,7 +441,7 @@ class ScanThread(QThread):
                     self.scanned = True
                     self.ser.write(self.start_stop_command_bytes)
 
-                uid = self.pn532.read_passive_target(timeout=0.1)  
+                uid = self.pn532.read_passive_target(timeout=0.1)
                 if uid is not None:
                     uid_string = ''.join([hex(i)[2:].zfill(2) for i in uid])
                     self.foundUserID.emit(uid_string)
@@ -450,6 +459,221 @@ class ScanThread(QThread):
     def stop(self):
         self._isRunning = False
         self.wait()  # ensure the thread has fully stopped
+
+
+class ProcessingThread(QThread):
+    finished_signal = pyqtSignal()  # Signal emitted when thread finishes
+
+    def __init__(self, file_path):
+        super().__init__()
+        self.file_path = file_path
+        self.url = "http://filesharing.n2rtech.com/api/send-data?"
+
+    def run(self):
+        result = self.pdf_to_text_ocr()
+        address = re.findall(
+            r'^(.*(?:Street|Avenue|Road|Lane).*\d{4}?.*)$', result, re.MULTILINE)
+        if address:
+            address = address[0]
+        else:
+            address = " "
+        print(address)
+
+        keywords = ["item", "Quantity", "qty", "items"]
+        keywords_info = ["Tax No", "Phone", "Email", "Invoice No"]
+
+        receipt_info = self.find_table(result, keywords_info)
+        info = self.extract_info(receipt_info)
+        print(f"Tax Number: {info['Tax Number']}")
+        print(f"Phone Number: {info['Phone Number']}")
+        print(f"Email: {info['Email']}")
+        print(f"Invoice Number: {info['Invoice Number']}")
+        print("\n\n")
+
+        receipt_text = self.find_table(result, keywords)
+        print(receipt_text)
+        print("\n\n")
+
+        receipt_text = receipt_text.replace('_', '0')
+        receipt_text = receipt_text.replace('---', '0')
+        items = self.extract_items(receipt_text)
+        api_data = self.items_to_api_format(items)
+        print(api_data)
+        print("\n\n")
+
+        get_response = self.send_api_data(api_data, "9968584843", "N2R Technologies3", "C-6 Sector-7 Noida Uttar Pradesh", "9968584843", "02/05/2023", "10000000f7bbda73", "5279")
+        self.decode_response(get_response)
+
+        self.finished_signal.emit()  # Emit signal when processing is done
+
+    def find_table(self, text, keywords, min_columns=4):
+        lines = text.split('\n')
+        table_data = []
+        header_found = False
+        headers = []
+
+        # Compile the regular expressions for case-insensitive keyword matching
+        keyword_patterns = [re.compile(
+            re.escape(kw), re.IGNORECASE) for kw in keywords]
+
+        for line in lines:
+            # Check if any of the keywords are present in the current line
+            if any(pattern.search(line) for pattern in keyword_patterns):
+                header_found = True
+                headers.append(line)
+                continue
+
+            if header_found:
+                row = line.split()
+
+                # Stop processing when a row with fewer columns than min_columns is encountered
+                if len(row) < min_columns:
+                    break
+
+                # Add the row to the table data
+                table_data.append(line)
+
+        # Reformat the table data
+        formatted_table_data = []
+        for data in table_data:
+            formatted_data = ' '.join(data.split())
+            formatted_table_data.append(formatted_data)
+
+        # Join the headers and table data into a single string
+        headers_string = "\n".join(headers)
+        table_string = "\n".join(formatted_table_data)
+        result = f"{headers_string}\n{table_string}"
+
+        return result
+
+    def pdf_to_text_ocr(self):
+        text = ''
+        with pdfplumber.open(self.file_path) as pdf:
+            for page in pdf.pages:
+                text += page.extract_text()
+        return text
+
+    # def pdf_to_text_ocr(self):
+    #     # Convert PDF to images
+    #     images = convert_from_path(self.file_path)
+
+    #     # Initialize the OCR result string
+    #     result = ""
+
+    #     # Loop through the images and perform OCR
+    #     for i, img in enumerate(images):
+    #         # Extract non-table text from the page
+    #         text = pytesseract.image_to_string(img, config="--psm 6 --oem 3")
+    #         result += text
+    #     return result
+
+    def extract_items(self, text):
+        lines = text.split('\n')
+        items = []
+        for line in lines:
+            # Updated regex pattern to match item, quantity, unit price, tax, discount, and total
+            pattern = r'\d+\s+([\w\s]+)\s+(\d+)\s+([\d\.]+)\s+([_\d\.%]+)\s+([_\d\.%]+)\s+([\d\.]+)'
+            match = re.search(pattern, line)
+            if match:
+                item = match.group(1).strip()
+                quantity = int(match.group(2))
+                unit_price = float(match.group(3))
+                tax = match.group(4)
+                discount = match.group(5)
+                total = float(match.group(6))
+                items.append({
+                    'item': item,
+                    'quantity': quantity,
+                    'unit_price': unit_price,
+                    'tax': tax,
+                    'discount': discount,
+                    'total': total
+                })
+        return items
+
+    def extract_info(self, text_info):
+        # dictionary to hold the results
+        info = {}
+
+        # patterns for each of the data
+        tax_pattern = r"Tax No\.:\s(\d+)"
+        phone_pattern = r"Phone:\s(\d+)"
+        email_pattern = r"Email:\s(\S+)"
+        invoice_pattern = r"Bill to Invoice No\.:\s(\S+)"
+
+        # search for each pattern and add to dictionary
+        tax_search = re.search(tax_pattern, text_info)
+        if tax_search:
+            info['Tax Number'] = tax_search.group(1)
+
+        phone_search = re.search(phone_pattern, text_info)
+        if phone_search:
+            info['Phone Number'] = phone_search.group(1)
+
+        email_search = re.search(email_pattern, text_info)
+        if email_search:
+            info['Email'] = email_search.group(1)
+
+        invoice_search = re.search(invoice_pattern, text_info)
+        if invoice_search:
+            info['Invoice Number'] = invoice_search.group(1)
+
+        return info
+
+    def items_to_api_format(self, items):
+        api_data = {}
+        for i, item in enumerate(items):
+            api_data[f'products[{i}][product]'] = item['item']
+            api_data[f'products[{i}][quantity]'] = str(item['quantity'])
+            api_data[f'products[{i}][price]'] = str(item['unit_price'])
+            api_data[f'products[{i}][tax]'] = item['tax']
+            api_data[f'products[{i}][total]'] = str(item['total'])
+        return api_data
+
+    def send_api_data(self, data, receiver, company_name, company_address, company_phone, date, device_id, receipt_number):
+        payload = {'receiver': receiver,
+                   'company_name': company_name,
+                   'company_address': company_address,
+                   'company_phone': company_phone,
+                   'date': date,
+                   'device_id': device_id,
+                   'receipt_number': receipt_number}
+
+        payload.update(data)
+        files = [
+
+        ]
+        headers = {}
+
+        response = requests.request(
+            "POST", self.url, headers=headers, data=payload, files=files)
+
+        return response.text
+
+    def decode_response(self, response_text):
+        # Parse the JSON string into a Python dictionary
+        parsed_data = json.loads(response_text)
+
+        # Check if 'success' or 'error' key exists in the parsed data
+        if 'success' in parsed_data:
+            print("Data uploaded successfully to API.")
+
+        elif 'error' in parsed_data:
+            error = parsed_data['error']
+            response_message = parsed_data['response']
+
+            # Print the error message
+            print(f"Error: {error}")
+            print(f"Response: {response_message}")
+
+        else:
+            print("Unexpected response format.")
+
+        if 'CODE' in parsed_data:
+            retrieval_code = parsed_data['CODE']
+
+            # Print the extracted values
+            print(f"CODE: {retrieval_code}")
 
 
 class SettingsWindow1(QMainWindow, Ui_MainWindow3):
@@ -483,14 +707,19 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
             self.ser, self.pn532, self.start_stop_command_bytes)
         self.scanThread.foundUserID.connect(self.processUserID)
         self.scanThread.start()
-        
+
         self.settings_window = NumericKeyboard(self, self, self.scanThread)
         self.stacked_widget.addWidget(self.settings_window)
 
     def processUserID(self, scanned_data):
-        self.scanThread.stop()
-        self.scanThread.wait()
         print("Found a User ID:", scanned_data)
+        self.processingThread = ProcessingThread(self.file_path)
+        self.processingThread.finished_signal.connect(self.onProcessingFinished)
+        self.processingThread.start()
+
+    def onProcessingFinished(self):
+        print("Processing finished!")
+        # You can add other code here to run when processing is done
 
     def open_keyboard(self):
         self.scanThread.stop()

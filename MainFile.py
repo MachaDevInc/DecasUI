@@ -835,15 +835,21 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
 
         # Check if 'success' or 'error' key exists in the parsed data
         if 'success' in self.parsed_data:
-            self.success = self.parsed_data['success']
-            self.firstname = self.parsed_data['firstname']
-            self.lastname = self.parsed_data['lastname']
-            self.username.setText(self.firstname + " " + self.lastname)
+            name = ""
+            success = self.parsed_data['success']
+            if self.parsed_data['firstname']:
+                firstname = self.parsed_data['firstname']
+                name = str(firstname)
+                print(f"First name: {firstname}")
+            if self.parsed_data['lastname']:
+                lastname = self.parsed_data['lastname']
+                name += str(lastname)
+                print(f"Last name: {lastname}")
 
             # Print the extracted values
-            print(f"Success: {self.success}")
-            print(f"First name: {self.firstname}")
-            print(f"Last name: {self.lastname}")
+            print(f"Success: {success}")
+            print(f"Name: {name}")
+            self.username.setText(name)
 
         elif 'error' in self.parsed_data:
             self.error = self.parsed_data['error']

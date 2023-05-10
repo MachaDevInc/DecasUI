@@ -30,6 +30,8 @@ import pytesseract
 import pdfplumber
 from pdf2image import convert_from_path
 
+import uuid
+
 proc1 = subprocess.Popen(["python", "progress bar.py"])
 time.sleep(1)
 proc1.terminate()
@@ -464,9 +466,11 @@ class ScanThread(QThread):
 class ProcessingThread(QThread):
     finished_signal = pyqtSignal()  # Signal emitted when thread finishes
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, userID, deviceID):
         super().__init__()
         self.file_path = file_path
+        self.userID = userID
+        self.deviceID = deviceID
         self.url = "http://filesharing.n2rtech.com/api/send-data?"
 
     def run(self):
@@ -480,7 +484,7 @@ class ProcessingThread(QThread):
         print(address)
 
         keywords = ["item", "Quantity", "qty", "items"]
-        keywords_info = ["Tax No", "Phone", "Email", "Invoice No"]
+        keywords_info = ["Tax No", "Phone", "Email", "Invoice No", "Date"]
 
         receipt_info = self.find_table(result, keywords_info)
         info = self.extract_info(receipt_info)
@@ -488,6 +492,7 @@ class ProcessingThread(QThread):
         print(f"Phone Number: {info['Phone Number']}")
         print(f"Email: {info['Email']}")
         print(f"Invoice Number: {info['Invoice Number']}")
+        print(f"Date: {info['Date']}")
         print("\n\n")
 
         receipt_text = self.find_table(result, keywords)
@@ -500,8 +505,16 @@ class ProcessingThread(QThread):
         api_data = self.items_to_api_format(items)
         print(api_data)
         print("\n\n")
+        
+        print(self.userID)
+        print("\n\n")
+        
+        print(self.deviceID)
+        print("\n\n")
 
-        get_response = self.send_api_data(api_data, "9968584843", "N2R Technologies3", "C-6 Sector-7 Noida Uttar Pradesh", "9968584843", "02/05/2023", "10000000f7bbda73", "5279")
+        # (data, receiver, company_name, company_address, company_phone, date, device_id, receipt_number)
+        get_response = self.send_api_data(api_data, self.userID, "N2R Technologies3", address,
+                                          info['Phone Number'], info['Date'], self.deviceID, info['Invoice Number'])
         self.decode_response(get_response)
 
         self.finished_signal.emit()  # Emit signal when processing is done
@@ -600,6 +613,7 @@ class ProcessingThread(QThread):
         phone_pattern = r"Phone:\s(\d+)"
         email_pattern = r"Email:\s(\S+)"
         invoice_pattern = r"Bill to Invoice No\.:\s(\S+)"
+        date_pattern = r"Date: \b(\d{1,2}[/-]\d{1,2}[/-]\d{4}|\d{1,2} \w{3}, \d{4}|\d{1,2},\w{3},\d{4}|\d{1,2} \w{3} \d{4})\b"
 
         # search for each pattern and add to dictionary
         tax_search = re.search(tax_pattern, text_info)
@@ -617,6 +631,10 @@ class ProcessingThread(QThread):
         invoice_search = re.search(invoice_pattern, text_info)
         if invoice_search:
             info['Invoice Number'] = invoice_search.group(1)
+
+        date_search = re.search(date_pattern, text_info)
+        if date_search:
+            info['Date'] = date_search.group(1)
 
         return info
 
@@ -712,14 +730,22 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.stacked_widget.addWidget(self.settings_window)
 
     def processUserID(self, scanned_data):
+        self.userID = scanned_data
         print("Found a User ID:", scanned_data)
-        self.processingThread = ProcessingThread(self.file_path)
-        self.processingThread.finished_signal.connect(self.onProcessingFinished)
+        self.deviceID = self.get_mac_address()
+        self.processingThread = ProcessingThread(self.file_path, self.userID, self.deviceID)
+        self.processingThread.finished_signal.connect(
+            self.onProcessingFinished)
         self.processingThread.start()
 
     def onProcessingFinished(self):
         print("Processing finished!")
         # You can add other code here to run when processing is done
+        
+    def get_mac_address(self):
+        mac_num = hex(uuid.getnode()).replace('0x', '').upper()
+        mac = '-'.join(mac_num[i: i + 2] for i in range(0, 11, 2))
+        return mac
 
     def open_keyboard(self):
         self.scanThread.stop()

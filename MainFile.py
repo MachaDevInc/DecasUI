@@ -505,10 +505,10 @@ class ProcessingThread(QThread):
         api_data = self.items_to_api_format(items)
         print(api_data)
         print("\n\n")
-        
+
         print(self.userID)
         print("\n\n")
-        
+
         print(self.deviceID)
         print("\n\n")
 
@@ -726,14 +726,15 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.scanThread.foundUserID.connect(self.processUserID)
         self.scanThread.start()
 
-        self.settings_window = NumericKeyboard(self, self, self.scanThread)
-        self.stacked_widget.addWidget(self.settings_window)
+        self.numeric_keyboard = NumericKeyboard(self, self, self.scanThread)
+        self.stacked_widget.addWidget(self.numeric_keyboard)
 
     def processUserID(self, scanned_data):
         self.userID = scanned_data
         print("Found a User ID:", scanned_data)
         self.deviceID = self.get_mac_address()
-        self.processingThread = ProcessingThread(self.file_path, self.userID, self.deviceID)
+        self.processingThread = ProcessingThread(
+            self.file_path, self.userID, self.deviceID)
         self.processingThread.finished_signal.connect(
             self.onProcessingFinished)
         self.processingThread.start()
@@ -741,7 +742,7 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
     def onProcessingFinished(self):
         print("Processing finished!")
         # You can add other code here to run when processing is done
-        
+
     def get_mac_address(self):
         mac_num = hex(uuid.getnode()).replace('0x', '').upper()
         mac = '-'.join(mac_num[i: i + 2] for i in range(0, 11, 2))
@@ -750,7 +751,7 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
     def open_keyboard(self):
         self.scanThread.stop()
         self.scanThread.wait()
-        index = self.stacked_widget.indexOf(self.settings_window)
+        index = self.stacked_widget.indexOf(self.numeric_keyboard)
         self.stacked_widget.setCurrentIndex(index)
 
     def next_settings5(self):
@@ -763,10 +764,10 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
 
 class NumericKeyboard(QMainWindow, Ui_MainWindow4):
 
-    def __init__(self, parent, settings_window, scanThread):
+    def __init__(self, parent, numeric_keyboard, scanThread):
         super().__init__()
         self.parent = parent
-        self.settings_window = settings_window
+        self.numeric_keyboard = numeric_keyboard
         self.scanThread = scanThread
         self.setupUi(self)
         super(NumericKeyboard, self).__init__()
@@ -786,7 +787,7 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
 
         self.Del.clicked.connect(self.delete_number)
         self.enter.clicked.connect(self.enter_pressed)
-
+        self.Retry.clicked.connect(self.show_output)
         self.cross.clicked.connect(self.destroy)
 
     def add_number(self, number):
@@ -800,25 +801,61 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
         self.textEdit.setPlainText(new_text)
 
     def enter_pressed(self):
-        self.saved_value = self.textEdit.toPlainText()
-        print(f"Saved value: {self.saved_value}")
-        self.close()
-        proc2 = subprocess.Popen(["python", "s6.py"])
-        time.sleep(10)
-        proc2.terminate()
+        self.number = self.textEdit.toPlainText()
+        print(f"Saved value: {self.number}")
+        self.check_number_api()
+        # self.close()
+        # proc2 = subprocess.Popen(["python", "s6.py"])
+        # time.sleep(10)
+        # proc2.terminate()
 
-    def get_saved_value(self):
-        return self.saved_value
+    def show_output(self):
+        self.number = self.textEdit.toPlainText()
+        print(f"Saved value: {self.number}")
+        self.check_number_api()
 
     def destroy(self):
         # Switch back to the SettingsWindow1
-        index = self.parent.stacked_widget.indexOf(self.settings_window)
+        index = self.parent.stacked_widget.indexOf(self.numeric_keyboard)
         self.parent.stacked_widget.setCurrentIndex(index)
-
         # Restart the scanThread
         self.scanThread.restart()
-
         self.hide()
+
+    def check_number_api(self):
+        self.url = "http://filesharing.n2rtech.com/api/mobile-verify"
+        self.payload = {'mobile': self.number}
+        self.files = []
+        self.headers = {}
+        self.response = requests.request(
+            "POST", self.url, headers=self.headers, data=self.payload, files=self.files)
+
+        # Parse the JSON string into a Python dictionary
+        self.parsed_data = json.loads(self.response.text)
+
+        # Check if 'success' or 'error' key exists in the parsed data
+        if 'success' in self.parsed_data:
+            self.success = self.parsed_data['success']
+            self.firstname = self.parsed_data['firstname']
+            self.lastname = self.parsed_data['lastname']
+            self.username.setPlainText(self.firstname + " " + self.lastname)
+
+            # Print the extracted values
+            print(f"Success: {self.success}")
+            print(f"First name: {self.firstname}")
+            print(f"Last name: {self.lastname}")
+
+        elif 'error' in self.parsed_data:
+            self.error = self.parsed_data['error']
+            self.response_message = self.parsed_data['response']
+            self.username.setPlainText("Number not found!!!")
+
+            # Print the error message
+            print(f"Error: {self.error}")
+            print(f"Response: {self.response_message}")
+
+        else:
+            print("Unexpected response format.")
 
 
 class DirectoryChecker(QObject):

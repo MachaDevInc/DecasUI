@@ -418,9 +418,10 @@ class ScanThread(QThread):
         self.pn532 = pn532
         self.start_stop_command_bytes = start_stop_command_bytes
         self.scanned = False
+        self._isRunning = True
 
     def run(self):
-        while not self.scanned:
+        while self._isRunning and not self.scanned:
             data_bytes = self.ser.readline()
             data = data_bytes[-2:].decode("utf-8").strip()
 
@@ -438,6 +439,18 @@ class ScanThread(QThread):
                     self.scanned = True
                     self.ser.write(self.start_stop_command_bytes)
 
+    def restart(self):
+        if self.isRunning():
+            self.stop()
+            self.wait()  # ensure the thread has fully stopped
+        self._isRunning = True
+        self.scanned = False
+        self.start()
+
+    def stop(self):
+        self._isRunning = False
+        self.wait()  # ensure the thread has fully stopped
+
 
 class SettingsWindow1(QMainWindow, Ui_MainWindow3):
     def __init__(self, stacked_widget, file_path):
@@ -452,9 +465,11 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.serial_port = "/dev/ttySC0"
         self.baud_rate = 9600
         start_scan_command = "7E 00 08 01 00 02 01 AB CD"
-        self.start_scan_command_bytes = bytes.fromhex(start_scan_command.replace(" ", ""))
+        self.start_scan_command_bytes = bytes.fromhex(
+            start_scan_command.replace(" ", ""))
         start_stop_command = "7E 00 08 01 00 02 00 AB CD"
-        self.start_stop_command_bytes = bytes.fromhex(start_stop_command.replace(" ", ""))
+        self.start_stop_command_bytes = bytes.fromhex(
+            start_stop_command.replace(" ", ""))
 
         # PN532
         i2c = busio.I2C(board.SCL, board.SDA)
@@ -464,18 +479,28 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.ser = serial.Serial(self.serial_port, self.baud_rate, timeout=0.5)
         self.ser.write(self.start_scan_command_bytes)
 
-        self.scanThread = ScanThread(self.ser, self.pn532, self.start_stop_command_bytes)
+        self.scanThread = ScanThread(
+            self.ser, self.pn532, self.start_stop_command_bytes)
         self.scanThread.foundUserID.connect(self.processUserID)
         self.scanThread.start()
+        
+        self.settings_window = NumericKeyboard(self, self, self.scanThread)
+        self.stacked_widget.addWidget(self.settings_window)
 
     def processUserID(self, scanned_data):
+        self.scanThread.stop()
+        self.scanThread.wait()
         print("Found a User ID:", scanned_data)
 
     def open_keyboard(self):
-        self.settings_window = NumericKeyboard(self)
-        self.settings_window.showFullScreen()
+        self.scanThread.stop()
+        self.scanThread.wait()
+        index = self.stacked_widget.indexOf(self.settings_window)
+        self.stacked_widget.setCurrentIndex(index)
 
     def next_settings5(self):
+        self.scanThread.stop()
+        self.scanThread.wait()
         proc2 = subprocess.Popen(["python", "s5.py"])
         time.sleep(10)
         proc2.terminate()
@@ -483,9 +508,11 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
 
 class NumericKeyboard(QMainWindow, Ui_MainWindow4):
 
-    def __init__(self, parent):
+    def __init__(self, parent, settings_window, scanThread):
         super().__init__()
         self.parent = parent
+        self.settings_window = settings_window
+        self.scanThread = scanThread
         self.setupUi(self)
         super(NumericKeyboard, self).__init__()
         self.setupUi(self)
@@ -529,6 +556,13 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
         return self.saved_value
 
     def destroy(self):
+        # Switch back to the SettingsWindow1
+        index = self.parent.stacked_widget.indexOf(self.settings_window)
+        self.parent.stacked_widget.setCurrentIndex(index)
+
+        # Restart the scanThread
+        self.scanThread.restart()
+
         self.hide()
 
 

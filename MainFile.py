@@ -15,6 +15,8 @@ from RSset import Ui_RS485
 import subprocess
 from w3 import Ui_MainWindow3
 from W4 import Ui_MainWindow4
+from w5 import Ui_MainWindow5
+from w6 import Ui_MainWindow6
 
 import board
 import busio
@@ -24,6 +26,7 @@ from adafruit_pn532.i2c import PN532_I2C
 import re
 import json
 import requests
+from datetime import datetime
 
 import sys
 import pytesseract
@@ -157,6 +160,23 @@ class SettingWindow(QMainWindow):
         self.setting.clicked.connect(self.open_next)
         self.connection.clicked.connect(self.open_connection)
         self.work.clicked.connect(self.open_work)
+
+        self.directory_checker = DirectoryChecker()
+        self.directory_checker.open_settings_window1_signal.connect(
+            self.open_settings_window1)
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.directory_checker.check_directory)
+        self.timer.start(500)
+
+    def open_settings_window1(self):
+        file_path = self.directory_checker.path_data
+        self.SettingsWindow1_window = SettingsWindow1(
+            self.stacked_widget, file_path)
+        self.stacked_widget.addWidget(self.SettingsWindow1_window)
+        self.stacked_widget.setCurrentWidget(self.SettingsWindow1_window)
+        # self.stacked_widget.removeWidget(self.setting_window)
+        self.timer.stop()
 
     def open_next(self):
         self.usb_window = USBWindow(self.stacked_widget)
@@ -432,48 +452,69 @@ class ScanThread(QThread):
         self._isRunning = True
 
     def run(self):
-        while self._isRunning and not self.scanned:
-            data_bytes = self.ser.readline()
-            data = data_bytes[-2:].decode("utf-8").strip()
+        while self._isRunning:
+            if not self.ser.isOpen():
+                try:
+                    self.ser.open()
+                except Exception as e:
+                    print(f"Failed to open serial port: {e}")
+                    break
 
-            if data != "31":
-                data = self.ser.readline().decode("utf-8").strip()
-                if data:
-                    self.foundUserID.emit(data)
-                    self.scanned = True
-                    self.ser.write(self.start_stop_command_bytes)
+            try:
+                data_bytes = self.ser.readline()
+                data = data_bytes[-2:].decode("utf-8").strip()
+                if data != "31":
+                    data = self.ser.readline().decode("utf-8").strip()
+                    if data:
+                        self.foundUserID.emit(data)
+                        self.scanned = True
+                        self.ser.write(self.start_stop_command_bytes)
 
-                uid = self.pn532.read_passive_target(timeout=0.1)
-                if uid is not None:
-                    uid_string = ''.join([hex(i)[2:].zfill(2) for i in uid])
-                    self.foundUserID.emit(uid_string)
-                    self.scanned = True
-                    self.ser.write(self.start_stop_command_bytes)
+                    uid = self.pn532.read_passive_target(timeout=0.1)
+                    if uid is not None:
+                        uid_string = ''.join(
+                            [hex(i)[2:].zfill(2) for i in uid])
+                        self.foundUserID.emit(uid_string)
+                        self.scanned = True
+                        self.ser.write(self.start_stop_command_bytes)
+
+            except Exception as e:
+                print(f"Error reading from serial port: {e}")
+
+            if self.scanned:
+                self.stop()
+                break
 
     def restart(self):
-        if self.isRunning():
-            self.stop()
-            self.wait()  # ensure the thread has fully stopped
+        self.stop()
         self._isRunning = True
         self.scanned = False
         self.start()
 
     def stop(self):
         self._isRunning = False
+        # Close the serial port
+        if self.ser.isOpen():
+            try:
+                self.ser.close()
+            except Exception as e:
+                print(f"Error closing serial port: {e}")
         self.wait()  # ensure the thread has fully stopped
 
 
 class ProcessingThread(QThread):
-    finished_signal = pyqtSignal()  # Signal emitted when thread finishes
+    finished_signal = pyqtSignal(str)  # Signal emitted when thread finishes
 
-    def __init__(self, file_path, userID, deviceID):
+    def __init__(self, file_path, userID):
         super().__init__()
         self.file_path = file_path
         self.userID = userID
-        self.deviceID = deviceID
         self.url = "http://filesharing.n2rtech.com/api/send-data?"
 
     def run(self):
+        # self.deviceID = self.get_mac_address()
+        self.deviceID = "10000000f7bbda73"
+        self.retrieval_code = ""
         result = self.pdf_to_text_ocr()
         address = re.findall(
             r'^(.*(?:Street|Avenue|Road|Lane).*\d{4}?.*)$', result, re.MULTILINE)
@@ -517,7 +558,12 @@ class ProcessingThread(QThread):
                                           info['Phone Number'], info['Date'], self.deviceID, info['Invoice Number'])
         self.decode_response(get_response)
 
-        self.finished_signal.emit()  # Emit signal when processing is done
+        self.finished_signal.emit(self.retrieval_code)  # Emit signal when processing is done
+
+    def get_mac_address(self):
+        mac_num = hex(uuid.getnode()).replace('0x', '').upper()
+        mac = '-'.join(mac_num[i: i + 2] for i in range(0, 11, 2))
+        return mac
 
     def find_table(self, text, keywords, min_columns=4):
         lines = text.split('\n')
@@ -613,7 +659,7 @@ class ProcessingThread(QThread):
         phone_pattern = r"Phone:\s(\d+)"
         email_pattern = r"Email:\s(\S+)"
         invoice_pattern = r"Bill to Invoice No\.:\s(\S+)"
-        date_pattern = r"Date: \b(\d{1,2}[/-]\d{1,2}[/-]\d{4}|\d{1,2} \w{3}, \d{4}|\d{1,2},\w{3},\d{4}|\d{1,2} \w{3} \d{4})\b"
+        date_pattern = r"\b(\d{1,2}[/-]\d{1,2}[/-]\d{4}|\d{1,2} \w{3}, \d{4}|\d{1,2},\w{3},\d{4}|\d{1,2} \w{3} \d{4})\b"
 
         # search for each pattern and add to dictionary
         tax_search = re.search(tax_pattern, text_info)
@@ -631,10 +677,32 @@ class ProcessingThread(QThread):
         invoice_search = re.search(invoice_pattern, text_info)
         if invoice_search:
             info['Invoice Number'] = invoice_search.group(1)
+            
+            # Extract only numbers from the text
+            info['Invoice Number'] = "".join(filter(str.isdigit, info['Invoice Number']))
 
-        date_search = re.search(date_pattern, text_info)
-        if date_search:
-            info['Date'] = date_search.group(1)
+            # If the length of the numbers string is more than 9 characters
+            if len(info['Invoice Number']) > 9:
+                # Trim the numbers string to the first 9 characters
+                info['Invoice Number'] = info['Invoice Number'][:9]
+
+        match = re.search(date_pattern, str(text_info))
+        if match:
+            if '/' in match.group():
+                info['Date'] = (datetime.strptime(
+                    match.group(), "%d/%m/%Y").date())
+            elif '-' in match.group():
+                info['Date'] = (datetime.strptime(
+                    match.group(), "%d-%m-%Y").date())
+            elif ',' in match.group() and ' ' not in match.group():
+                info['Date'] = (datetime.strptime(
+                    match.group(), "%d,%b,%Y").date())
+            elif ',' in match.group() and ' ' in match.group():
+                info['Date'] = (datetime.strptime(
+                    match.group(), "%d %b, %Y").date())
+            elif ' ' in match.group() and ',' not in match.group():
+                info['Date'] = (datetime.strptime(
+                    match.group(), "%d %b %Y").date())
 
         return info
 
@@ -688,10 +756,11 @@ class ProcessingThread(QThread):
             print("Unexpected response format.")
 
         if 'CODE' in parsed_data:
-            retrieval_code = parsed_data['CODE']
+            code = parsed_data['CODE']
 
             # Print the extracted values
-            print(f"CODE: {retrieval_code}")
+            print(f"CODE: {code}")
+            self.retrieval_code = str(code)
 
 
 class SettingsWindow1(QMainWindow, Ui_MainWindow3):
@@ -726,53 +795,50 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.scanThread.foundUserID.connect(self.processUserID)
         self.scanThread.start()
 
-        self.numeric_keyboard = NumericKeyboard(self, self, self.scanThread)
+        self.numeric_keyboard = NumericKeyboard(
+            self, self.stacked_widget, self, self.scanThread, self.file_path)
         self.stacked_widget.addWidget(self.numeric_keyboard)
 
     def processUserID(self, scanned_data):
         self.userID = scanned_data
         print("Found a User ID:", scanned_data)
-        self.deviceID = self.get_mac_address()
         self.processingThread = ProcessingThread(
-            self.file_path, self.userID, self.deviceID)
+            self.file_path, self.userID)
         self.processingThread.finished_signal.connect(
             self.onProcessingFinished)
         self.processingThread.start()
 
-    def onProcessingFinished(self):
+    def onProcessingFinished(self, retrieval_code):
+        self.code = retrieval_code
         print("Processing finished!")
-        # You can add other code here to run when processing is done
-
-    def get_mac_address(self):
-        mac_num = hex(uuid.getnode()).replace('0x', '').upper()
-        mac = '-'.join(mac_num[i: i + 2] for i in range(0, 11, 2))
-        return mac
+        print(retrieval_code)
 
     def open_keyboard(self):
         self.scanThread.stop()
-        self.scanThread.wait()
         index = self.stacked_widget.indexOf(self.numeric_keyboard)
         self.stacked_widget.setCurrentIndex(index)
 
     def next_settings5(self):
         self.scanThread.stop()
-        self.scanThread.wait()
-        proc2 = subprocess.Popen(["python", "s5.py"])
-        time.sleep(10)
-        proc2.terminate()
+        self.PrintRetrievalCode_window = PrintRetrievalCode(
+            self.file_path, self.stacked_widget, self.scanThread)
+        self.stacked_widget.addWidget(self.PrintRetrievalCode_window)
+        self.stacked_widget.setCurrentWidget(self.PrintRetrievalCode_window)
 
 
 class NumericKeyboard(QMainWindow, Ui_MainWindow4):
 
-    def __init__(self, parent, numeric_keyboard, scanThread):
-        super().__init__()
-        self.parent = parent
-        self.numeric_keyboard = numeric_keyboard
-        self.scanThread = scanThread
-        self.setupUi(self)
+    def __init__(self, parent, stacked_widget, numeric_keyboard, scanThread, file_path):
         super(NumericKeyboard, self).__init__()
         self.setupUi(self)
+        self.parent = parent
+        self.stacked_widget = stacked_widget
+        self.file_path = file_path
+        self.numeric_keyboard = numeric_keyboard
+        self.scanThread = scanThread
+        self.number_found = False
         self.saved_value = ""
+        self.name = ""
         # Connect buttons to their respective functions
         self.b0.clicked.connect(lambda: self.add_number('0'))
         self.b1.clicked.connect(lambda: self.add_number('1'))
@@ -801,13 +867,21 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
         self.textEdit.setPlainText(new_text)
 
     def enter_pressed(self):
-        self.number = self.textEdit.toPlainText()
-        print(f"Saved value: {self.number}")
-        self.check_number_api()
-        # self.close()
-        # proc2 = subprocess.Popen(["python", "s6.py"])
-        # time.sleep(10)
-        # proc2.terminate()
+        if self.number_found:
+            self.userID = self.name
+            self.processingThread = ProcessingThread(
+                self.file_path, self.userID)
+            self.processingThread.finished_signal.connect(
+                self.onProcessingFinished)
+            self.processingThread.start()
+            self.DataSentWindow_window = DataSentWindow(
+                self.file_path, self.stacked_widget, self.scanThread)
+            self.stacked_widget.addWidget(self.DataSentWindow_window)
+            self.stacked_widget.setCurrentWidget(self.DataSentWindow_window)
+
+    def onProcessingFinished(self, retrieval_code):
+        print("Processing finished!")
+        print(retrieval_code)
 
     def show_output(self):
         self.number = self.textEdit.toPlainText()
@@ -835,21 +909,21 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
 
         # Check if 'success' or 'error' key exists in the parsed data
         if 'success' in self.parsed_data:
-            name = ""
             success = self.parsed_data['success']
             if self.parsed_data['firstname']:
                 firstname = self.parsed_data['firstname']
-                name = str(firstname)
+                self.name = str(firstname)
                 print(f"First name: {firstname}")
             if self.parsed_data['lastname']:
                 lastname = self.parsed_data['lastname']
-                name += str(lastname)
+                self.name += str(lastname)
                 print(f"Last name: {lastname}")
 
             # Print the extracted values
             print(f"Success: {success}")
-            print(f"Name: {name}")
-            self.username.setText(name)
+            print(f"Name: {self.name}")
+            self.username.setText(self.name)
+            self.number_found = True
 
         elif 'error' in self.parsed_data:
             self.error = self.parsed_data['error']
@@ -859,9 +933,63 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
             # Print the error message
             print(f"Error: {self.error}")
             print(f"Response: {self.response_message}")
+            self.number_found = False
 
         else:
             print("Unexpected response format.")
+            self.number_found = False
+
+
+class DataSentWindow(QMainWindow, Ui_MainWindow6):
+    def __init__(self, file_path, stacked_widget, scanThread):
+        super().__init__()
+        self.file_path = file_path
+        self.stacked_widget = stacked_widget
+        self.scanThread = scanThread
+        self.setupUi(self)
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.go_home)
+        self.timer.start(5000)
+
+    def go_home(self):
+        self.timer.stop()
+        self.SettingWindow_window = SettingWindow(
+            self.stacked_widget)
+        self.stacked_widget.addWidget(self.SettingWindow_window)
+        self.stacked_widget.setCurrentWidget(self.SettingWindow_window)
+
+
+class PrintRetrievalCode(QMainWindow, Ui_MainWindow5):
+    def __init__(self, file_path, stacked_widget, scanThread):
+        super().__init__()
+        self.file_path = file_path
+        self.stacked_widget = stacked_widget
+        self.scanThread = scanThread
+        self.setupUi(self)
+
+        self.userID = ""
+        self.processingThread = ProcessingThread(
+            self.file_path, self.userID)
+        self.processingThread.finished_signal.connect(
+            self.onProcessingFinished)
+        self.processingThread.start()
+
+    def onProcessingFinished(self, retrieval_code):
+        self.code = retrieval_code
+        print("Processing finished!")
+        print(retrieval_code)
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.go_home)
+        self.timer.start(10000)
+
+    def go_home(self):
+        self.timer.stop()
+        self.SettingWindow_window = SettingWindow(
+            self.stacked_widget)
+        self.stacked_widget.addWidget(self.SettingWindow_window)
+        self.stacked_widget.setCurrentWidget(self.SettingWindow_window)
 
 
 class DirectoryChecker(QObject):
@@ -894,23 +1022,6 @@ class MyApp(QApplication):
         self.setting_window = SettingWindow(self.stacked_widget)
         self.stacked_widget.addWidget(self.setting_window)
         self.stacked_widget.showFullScreen()
-
-        self.directory_checker = DirectoryChecker()
-        self.directory_checker.open_settings_window1_signal.connect(
-            self.open_settings_window1)
-
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.directory_checker.check_directory)
-        self.timer.start(500)
-
-    def open_settings_window1(self):
-        file_path = self.directory_checker.path_data
-        self.SettingsWindow1_window = SettingsWindow1(
-            self.stacked_widget, file_path)
-        self.stacked_widget.addWidget(self.SettingsWindow1_window)
-        self.stacked_widget.setCurrentWidget(self.SettingsWindow1_window)
-        self.stacked_widget.removeWidget(self.setting_window)
-        self.timer.stop()
 
 
 if __name__ == '__main__':

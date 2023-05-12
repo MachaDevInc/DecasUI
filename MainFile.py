@@ -826,11 +826,11 @@ class SettingsWindow1(QMainWindow):
         self.stacked_widget.setCurrentWidget(self.PrintRetrievalCode_window)
 
 
-class NumericKeyboard(QMainWindow, Ui_MainWindow4):
+class NumericKeyboard(QMainWindow):
 
     def __init__(self, parent, stacked_widget, numeric_keyboard, scanThread, file_path):
         super(NumericKeyboard, self).__init__()
-        self.setupUi(self)
+        loadUi('W4.ui', self)
         self.parent = parent
         self.stacked_widget = stacked_widget
         self.file_path = file_path
@@ -940,13 +940,13 @@ class NumericKeyboard(QMainWindow, Ui_MainWindow4):
             self.number_found = False
 
 
-class DataSentWindow(QMainWindow, Ui_MainWindow6):
+class DataSentWindow(QMainWindow):
     def __init__(self, file_path, stacked_widget, scanThread):
         super().__init__()
+        loadUi('w6.ui', self)
         self.file_path = file_path
         self.stacked_widget = stacked_widget
         self.scanThread = scanThread
-        self.setupUi(self)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.go_home)
@@ -960,13 +960,13 @@ class DataSentWindow(QMainWindow, Ui_MainWindow6):
         self.stacked_widget.setCurrentWidget(self.SettingWindow_window)
 
 
-class PrintRetrievalCode(QMainWindow, Ui_MainWindow5):
+class PrintRetrievalCode(QMainWindow):
     def __init__(self, file_path, stacked_widget, scanThread):
         super().__init__()
+        loadUi('w5.ui', self)
         self.file_path = file_path
         self.stacked_widget = stacked_widget
         self.scanThread = scanThread
-        self.setupUi(self)
 
         self.userID = ""
         self.processingThread = ProcessingThread(

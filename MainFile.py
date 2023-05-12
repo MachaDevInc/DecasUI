@@ -768,7 +768,6 @@ class SettingsWindow1(QMainWindow):
         super().__init__()
         loadUi('w3.ui', self)
         self.stacked_widget = stacked_widget
-        self.setupUi(self)
         self.file_path = file_path
         self.next1.clicked.connect(self.open_keyboard)
         self.Retreive.clicked.connect(self.next_settings5)

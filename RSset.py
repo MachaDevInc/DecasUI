@@ -97,7 +97,7 @@ class Ui_RS485(object):
     def retranslateUi(self, RS485):
         _translate = QtCore.QCoreApplication.translate
         RS485.setWindowTitle(_translate("RS485", "MainWindow"))
-        self.label_2.setText(_translate("RS485", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">Address</span></p></body></html>"))
-        self.label_3.setText(_translate("RS485", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">Baud Rate</span></p></body></html>"))
-        self.label_4.setText(_translate("RS485", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">Parity</span></p></body></html>"))
-        self.label_5.setText(_translate("RS485", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">RS 232/485 </span></p></body></html>"))
+        self.label_2.setText(_translate("RS485", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Address</span></p></body></html>"))
+        self.label_3.setText(_translate("RS485", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Baud Rate</span></p></body></html>"))
+        self.label_4.setText(_translate("RS485", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Parity</span></p></body></html>"))
+        self.label_5.setText(_translate("RS485", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">RS 232/485 </span></p></body></html>"))

@@ -83,4 +83,4 @@ class Ui_MainWindow2(object):
     def retranslateUi(self, MainWindow2):
         _translate = QtCore.QCoreApplication.translate
         MainWindow2.setWindowTitle(_translate("MainWindow2", "MainWindow"))
-        self.label_2.setText(_translate("MainWindow2", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">Device is Ready</span></p></body></html>"))
+        self.label_2.setText(_translate("MainWindow2", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Device is Ready</span></p></body></html>"))

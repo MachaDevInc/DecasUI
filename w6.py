@@ -48,6 +48,6 @@ class Ui_MainWindow6(object):
     def retranslateUi(self, MainWindow6):
         _translate = QtCore.QCoreApplication.translate
         MainWindow6.setWindowTitle(_translate("MainWindow6", "MainWindow"))
-        self.label.setText(_translate("MainWindow6", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">Receipt Sent Successfully</span></p></body></html>"))
-        self.label_3.setText(_translate("MainWindow6", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">Thanks for choosing.</span></p></body></html>"))
-        self.label_4.setText(_translate("MainWindow6", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">RESPSLIPS</span></p></body></html>"))
+        self.label.setText(_translate("MainWindow6", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Receipt Sent Successfully</span></p></body></html>"))
+        self.label_3.setText(_translate("MainWindow6", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Thanks for choosing.</span></p></body></html>"))
+        self.label_4.setText(_translate("MainWindow6", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">RESPSLIPS</span></p></body></html>"))

@@ -86,10 +86,10 @@ class Ui_MainWindow3(object):
     def retranslateUi(self, MainWindow3):
         _translate = QtCore.QCoreApplication.translate
         MainWindow3.setWindowTitle(_translate("MainWindow3", "MainWindow"))
-        self.label_3.setText(_translate("MainWindow3", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">SCAN QR HERE</span></p></body></html>"))
-        self.label_5.setText(_translate("MainWindow3", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">OR</span></p></body></html>"))
-        self.label_6.setText(_translate("MainWindow3", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">ENTER MOBILE NUMBER</span></p></body></html>"))
-        self.Retrieve.setText(_translate("MainWindow3", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600; color:#ff0000;\">Retreive</span></p></body></html>"))
+        self.label_3.setText(_translate("MainWindow3", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">SCAN QR HERE</span></p></body></html>"))
+        self.label_5.setText(_translate("MainWindow3", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">OR</span></p></body></html>"))
+        self.label_6.setText(_translate("MainWindow3", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">ENTER MOBILE NUMBER</span></p></body></html>"))
+        self.Retrieve.setText(_translate("MainWindow3", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600; color:#ff0000;\">Retreive</span></p></body></html>"))
         self.text.setHtml(_translate("MainWindow3", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"

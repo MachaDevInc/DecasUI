@@ -107,6 +107,6 @@ class Ui_MainWindow7(object):
     def retranslateUi(self, MainWindow7):
         _translate = QtCore.QCoreApplication.translate
         MainWindow7.setWindowTitle(_translate("MainWindow7", "MainWindow"))
-        self.label_4.setText(_translate("MainWindow7", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">Wifi Setting</span></p></body></html>"))
-        self.label_6.setText(_translate("MainWindow7", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">RS485/232</span></p></body></html>"))
-        self.label_7.setText(_translate("MainWindow7", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">USB</span></p></body></html>"))
+        self.label_4.setText(_translate("MainWindow7", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Wifi Setting</span></p></body></html>"))
+        self.label_6.setText(_translate("MainWindow7", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">RS485/232</span></p></body></html>"))
+        self.label_7.setText(_translate("MainWindow7", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">USB</span></p></body></html>"))

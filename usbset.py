@@ -73,5 +73,5 @@ class Ui_usbsetting(object):
     def retranslateUi(self, usbsetting):
         _translate = QtCore.QCoreApplication.translate
         usbsetting.setWindowTitle(_translate("usbsetting", "MainWindow"))
-        self.label_2.setText(_translate("usbsetting", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">COM Port</span></p></body></html>"))
-        self.label_5.setText(_translate("usbsetting", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">USB Setting</span></p></body></html>"))
+        self.label_2.setText(_translate("usbsetting", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">COM Port</span></p></body></html>"))
+        self.label_5.setText(_translate("usbsetting", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">USB Setting</span></p></body></html>"))

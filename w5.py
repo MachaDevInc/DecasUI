@@ -50,5 +50,5 @@ class Ui_MainWindow5(object):
     def retranslateUi(self, MainWindow5):
         _translate = QtCore.QCoreApplication.translate
         MainWindow5.setWindowTitle(_translate("MainWindow5", "MainWindow"))
-        self.label_2.setText(_translate("MainWindow5", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">Please Wait.....</span></p></body></html>"))
-        self.label_3.setText(_translate("MainWindow5", "<html><head/><body><p><span style=\" font-size:24pt; font-weight:600;\">Printing your Retrieve code.</span></p></body></html>"))
+        self.label_2.setText(_translate("MainWindow5", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Please Wait.....</span></p></body></html>"))
+        self.label_3.setText(_translate("MainWindow5", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Printing your Retrieve code.</span></p></body></html>"))

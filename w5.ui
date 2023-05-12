@@ -58,27 +58,27 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>60</y>
-      <width>478</width>
-      <height>130</height>
+      <x>-100</x>
+      <y>-30</y>
+      <width>1278</width>
+      <height>310</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
      <property name="spacing">
-      <number>10</number>
+      <number>50</number>
      </property>
      <property name="leftMargin">
-      <number>100</number>
+      <number>500</number>
      </property>
      <property name="topMargin">
-      <number>30</number>
-     </property>
-     <property name="rightMargin">
       <number>100</number>
      </property>
+     <property name="rightMargin">
+      <number>500</number>
+     </property>
      <property name="bottomMargin">
-      <number>30</number>
+      <number>100</number>
      </property>
      <item alignment="Qt::AlignHCenter">
       <widget class="QLabel" name="label_2">

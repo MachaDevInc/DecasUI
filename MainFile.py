@@ -763,9 +763,10 @@ class ProcessingThread(QThread):
             self.retrieval_code = str(code)
 
 
-class SettingsWindow1(QMainWindow, Ui_MainWindow3):
+class SettingsWindow1(QMainWindow):
     def __init__(self, stacked_widget, file_path):
         super().__init__()
+        loadUi('w3.ui', self)
         self.stacked_widget = stacked_widget
         self.setupUi(self)
         self.file_path = file_path

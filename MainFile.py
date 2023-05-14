@@ -503,12 +503,13 @@ class ScanThread(QThread):
 
 
 class ProcessingThread(QThread):
-    finished_signal = pyqtSignal(str)  # Signal emitted when thread finishes
+    finished_signal = pyqtSignal(str, bool)  # Signal emitted when thread finishes
 
     def __init__(self, file_path, userID):
         super().__init__()
         self.file_path = file_path
         self.userID = userID
+        self.data_sent = False
         self.url = "http://filesharing.n2rtech.com/api/send-data?"
 
     def run(self):
@@ -558,7 +559,7 @@ class ProcessingThread(QThread):
                                           info['Phone Number'], info['Date'], self.deviceID, info['Invoice Number'])
         self.decode_response(get_response)
 
-        self.finished_signal.emit(self.retrieval_code)  # Emit signal when processing is done
+        self.finished_signal.emit(self.retrieval_code, self.data_sent)  # Emit signal when processing is done
 
     def get_mac_address(self):
         mac_num = hex(uuid.getnode()).replace('0x', '').upper()
@@ -742,6 +743,7 @@ class ProcessingThread(QThread):
 
         # Check if 'success' or 'error' key exists in the parsed data
         if 'success' in parsed_data:
+            self.data_sent = True
             print("Data uploaded successfully to API.")
 
         elif 'error' in parsed_data:
@@ -808,8 +810,12 @@ class SettingsWindow1(QMainWindow):
             self.onProcessingFinished)
         self.processingThread.start()
 
-    def onProcessingFinished(self, retrieval_code):
+    def onProcessingFinished(self, retrieval_code, data_sent):
         self.code = retrieval_code
+        self.data_sent = data_sent
+        if self.data_sent:
+            # use the remove() function to delete the file
+            os.remove(self.file_path)
         print("Processing finished!")
         print(retrieval_code)
 
@@ -879,7 +885,12 @@ class NumericKeyboard(QMainWindow):
             self.stacked_widget.addWidget(self.DataSentWindow_window)
             self.stacked_widget.setCurrentWidget(self.DataSentWindow_window)
 
-    def onProcessingFinished(self, retrieval_code):
+    def onProcessingFinished(self, retrieval_code, data_sent):
+        self.code = retrieval_code
+        self.data_sent = data_sent
+        if self.data_sent:
+            # use the remove() function to delete the file
+            os.remove(self.file_path)
         print("Processing finished!")
         print(retrieval_code)
 
@@ -975,8 +986,12 @@ class PrintRetrievalCode(QMainWindow):
             self.onProcessingFinished)
         self.processingThread.start()
 
-    def onProcessingFinished(self, retrieval_code):
+    def onProcessingFinished(self, retrieval_code, data_sent):
         self.code = retrieval_code
+        self.data_sent = data_sent
+        if self.data_sent:
+            # use the remove() function to delete the file
+            os.remove(self.file_path)
         print("Processing finished!")
         print(retrieval_code)
 

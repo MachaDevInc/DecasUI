@@ -22,6 +22,7 @@ import board
 import busio
 import serial
 from adafruit_pn532.i2c import PN532_I2C
+from escpos.printer import Serial
 
 import re
 import json
@@ -503,7 +504,8 @@ class ScanThread(QThread):
 
 
 class ProcessingThread(QThread):
-    finished_signal = pyqtSignal(str, bool)  # Signal emitted when thread finishes
+    # Signal emitted when thread finishes
+    finished_signal = pyqtSignal(str, bool)
 
     def __init__(self, file_path, userID):
         super().__init__()
@@ -559,7 +561,8 @@ class ProcessingThread(QThread):
                                           info['Phone Number'], info['Date'], self.deviceID, info['Invoice Number'])
         self.decode_response(get_response)
 
-        self.finished_signal.emit(self.retrieval_code, self.data_sent)  # Emit signal when processing is done
+        # Emit signal when processing is done
+        self.finished_signal.emit(self.retrieval_code, self.data_sent)
 
     def get_mac_address(self):
         mac_num = hex(uuid.getnode()).replace('0x', '').upper()
@@ -678,9 +681,10 @@ class ProcessingThread(QThread):
         invoice_search = re.search(invoice_pattern, text_info)
         if invoice_search:
             info['Invoice Number'] = invoice_search.group(1)
-            
+
             # Extract only numbers from the text
-            info['Invoice Number'] = "".join(filter(str.isdigit, info['Invoice Number']))
+            info['Invoice Number'] = "".join(
+                filter(str.isdigit, info['Invoice Number']))
 
             # If the length of the numbers string is more than 9 characters
             if len(info['Invoice Number']) > 9:
@@ -992,12 +996,61 @@ class PrintRetrievalCode(QMainWindow):
         if self.data_sent:
             # use the remove() function to delete the file
             os.remove(self.file_path)
-        print("Processing finished!")
-        print(retrieval_code)
+            self.thermal_print()
+            print("Processing finished!")
+            print(self.code)
 
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.go_home)
-        self.timer.start(10000)
+            self.timer = QTimer()
+            self.timer.timeout.connect(self.go_home)
+            self.timer.start(500)
+
+    def thermal_print(self):
+        p = Serial(devfile='/dev/ttySC1',
+                   baudrate=9600,
+                   bytesize=8,
+                   parity='N',
+                   stopbits=1,
+                   timeout=1.00,
+                   dsrdtr=True
+                   )
+        p.set(
+            align="center",
+            font="b",
+            width=1,
+            height=1,
+            density=2,
+            invert=0,
+            smooth=True,
+            flip=False,
+        )
+        # Printing the image
+        # here location can be your image path in “ ”
+        p.image("/home/decas/Logo.png", impl="bitImageColumn")
+
+        p.set(
+            align="center",
+            font="a",
+            width=2,
+            height=2,
+            density=2,
+            invert=0,
+            smooth=False,
+            flip=False,
+        )
+        p.text(str("TOKEN: " + str(self.code) + "\n"))
+
+        # printing the initial data
+        p.set(
+            align="left",
+        )
+        p.text("\n")
+        p.text("""Retrieve receipt on repslips.com\nSteps:\n
+        1) Sign up / Log on to:  \n
+                repslips.com\n2) Click on menu -->RETRIVAL \n
+        3) Type the above code and SUBMIT \n
+        4) View on recent Receipt \n
+        Enjoy.........\n\n\n""")
+        print("done")
 
     def go_home(self):
         self.timer.stop()

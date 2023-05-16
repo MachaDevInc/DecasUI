@@ -519,6 +519,7 @@ class ProcessingThread(QThread):
         self.deviceID = "10000000f7bbda73"
         self.retrieval_code = ""
         result = self.pdf_to_text_ocr()
+        print(result)
         address = re.findall(
             r'^(.*(?:Street|Avenue|Road|Lane).*\d{4}?.*)$', result, re.MULTILINE)
         if address:
@@ -609,26 +610,26 @@ class ProcessingThread(QThread):
 
         return result
 
-    def pdf_to_text_ocr(self):
-        text = ''
-        with pdfplumber.open(self.file_path) as pdf:
-            for page in pdf.pages:
-                text += page.extract_text()
-        return text
-
     # def pdf_to_text_ocr(self):
-    #     # Convert PDF to images
-    #     images = convert_from_path(self.file_path)
+    #     text = ''
+    #     with pdfplumber.open(self.file_path) as pdf:
+    #         for page in pdf.pages:
+    #             text += page.extract_text()
+    #     return text
 
-    #     # Initialize the OCR result string
-    #     result = ""
+    def pdf_to_text_ocr(self):
+        # Convert PDF to images
+        images = convert_from_path(self.file_path)
 
-    #     # Loop through the images and perform OCR
-    #     for i, img in enumerate(images):
-    #         # Extract non-table text from the page
-    #         text = pytesseract.image_to_string(img, config="--psm 6 --oem 3")
-    #         result += text
-    #     return result
+        # Initialize the OCR result string
+        result = ""
+
+        # Loop through the images and perform OCR
+        for i, img in enumerate(images):
+            # Extract non-table text from the page
+            text = pytesseract.image_to_string(img, config="--psm 6 --oem 3")
+            result += text
+        return result
 
     def extract_items(self, text):
         lines = text.split('\n')
@@ -1068,8 +1069,8 @@ class DirectoryChecker(QObject):
         self.path_data = ""  # Initialize path_data with an empty string
 
     def check_directory(self):
-        directory_path = '/home/decas/PDF/'
-        # directory_path = '/var/spool/cups-pdf/ANONYMOUS/'
+        # directory_path = '/home/decas/PDF/'
+        directory_path = '/var/spool/cups-pdf/ANONYMOUS/'
         # directory_path = 'D:/DecasUI/DecasUI/ANONYMOUS/'
 
         contents = os.listdir(directory_path)

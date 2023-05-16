@@ -1068,7 +1068,8 @@ class DirectoryChecker(QObject):
         self.path_data = ""  # Initialize path_data with an empty string
 
     def check_directory(self):
-        directory_path = '/var/spool/cups-pdf/ANONYMOUS/'
+        directory_path = '/home/decas/PDF/'
+        # directory_path = '/var/spool/cups-pdf/ANONYMOUS/'
         # directory_path = 'D:/DecasUI/DecasUI/ANONYMOUS/'
 
         contents = os.listdir(directory_path)

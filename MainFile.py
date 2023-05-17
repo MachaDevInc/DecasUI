@@ -328,22 +328,31 @@ class WifiWindow(QMainWindow):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-        interface = "wlan0"  # The default interface for Raspberry Pi's WiFi
-        cmd = f"iwlist {interface} scan"
-        output = subprocess.check_output(cmd, shell=True).decode("utf-8")
-        lines = output.split("\n")
-        networks = []
+        
+        self.status.setText(self._translate(
+            "wifisetting", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
+        self.discovery_thread = WiFiDiscoveryThread(self)
+        self.discovery_thread.device_discovered.connect(
+            self.add_wifi_item)
+        self.discovery_thread.start()
 
-        for line in lines:
-            line = line.strip()
-            if "ESSID" in line:
-                networks.append(line.split(":")[1].strip('"'))
-
-        for network in networks:
-            self.ssid.addItems({network})
-
+        self.refresh.clicked.connect(self.refresh_wifi_scan)
         # Connect the combo box's activated signal to a slot function
         self.ssid.activated[str].connect(self.on_combobox_activated)
+
+    def refresh_wifi_scan(self):
+        self.ssid.clear()
+        self.status.setText(self._translate(
+            "wifisetting", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
+        self.discovery_thread = WiFiDiscoveryThread(self)
+        self.discovery_thread.device_discovered.connect(
+            self.add_wifi_item)
+        self.discovery_thread.start()
+
+    def add_wifi_item(self, name, devices):
+        self.status.setText(self._translate(
+            "wifisetting", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" + devices + " networks found</span></p></body></html>"))
+        self.ssid.addItem(name)
 
     def on_combobox_activated(self, text):
         print(f"Selected option: {text}")
@@ -478,6 +487,23 @@ class bluetoothWindow(QMainWindow):
     def open_virtual_keyboard(self):
         virtual_keyboard = VirtualKeyboard(self.update_text_edit)
         virtual_keyboard.mainloop()
+
+
+class WiFiDiscoveryThread(QThread):
+    device_discovered = pyqtSignal(str, str)
+
+    def run(self):
+        interface = "wlan0"  # The default interface for Raspberry Pi's WiFi
+        cmd = f"iwlist {interface} scan"
+        output = subprocess.check_output(cmd, shell=True).decode("utf-8")
+        lines = output.split("\n")
+        devices = str(len(lines))
+
+        for line in lines:
+            line = line.strip()
+            if "ESSID" in line:
+                ssid = line.split(":")[1].strip('"')
+                self.device_discovered.emit(ssid, devices)
 
 
 class BluetoothDiscoveryThread(QThread):

@@ -545,6 +545,7 @@ class ProcessingThread(QThread):
         print("\n\n")
 
         receipt_text = receipt_text.replace('_', '0')
+        receipt_text = receipt_text.replace('-', '0')
         receipt_text = receipt_text.replace('---', '0')
         items = self.extract_items(receipt_text)
         api_data = self.items_to_api_format(items)

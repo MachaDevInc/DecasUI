@@ -515,8 +515,8 @@ class ProcessingThread(QThread):
         self.url = "http://filesharing.n2rtech.com/api/send-data?"
 
     def run(self):
-        # self.deviceID = self.get_mac_address()
-        self.deviceID = "10000000f7bbda73"
+        self.deviceID = self.get_mac_address()
+        # self.deviceID = "10000000f7bbda73"
         self.retrieval_code = ""
         result = self.pdf_to_text_ocr()
         print(result)

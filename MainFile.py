@@ -319,6 +319,8 @@ class WifiWindow(QMainWindow):
         super().__init__()
         loadUi('wifiset.ui', self)
 
+        self.network_ssid = ""
+        self.network_password = ""
         self.stacked_widget = stacked_widget
         self._translate = QtCore.QCoreApplication.translate
         self.confirm.clicked.connect(self.done)
@@ -329,13 +331,15 @@ class WifiWindow(QMainWindow):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-        
+
         self.status.setText(self._translate(
             "wifisetting", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
         self.discovery_thread = WiFiDiscoveryThread(self)
         self.discovery_thread.device_discovered.connect(
             self.add_wifi_item)
         self.discovery_thread.start()
+
+        self.network_ssid = self.ssid.itemText(0)
 
         self.refresh.clicked.connect(self.refresh_wifi_scan)
         # Connect the combo box's activated signal to a slot function
@@ -356,52 +360,104 @@ class WifiWindow(QMainWindow):
         self.ssid.addItem(name)
 
     def on_combobox_activated(self, text):
-        self.ssid = text
+        self.network_ssid = text
         print(f"Selected option: {text}")
 
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
         self.date.setPlainText(f" {shared_data.date}")
-        
+
     def done(self):
-        self.network_password = self.textEdit1.toPlainText()
+        self.network_password = str(self.textEdit1.toPlainText())
         print(self.network_password)
-        # The SSID and password for the Wi-Fi network
-        self.network_ssid = "your_network_ssid"
 
-        # The network interface (you might need to change this)
-        self.interface = "wlan0"
+        if (self.network_ssid != "" and self.network_password != ""):
+            self.connect_wifi(self.network_ssid, self.network_password)
 
-        # Save the previous connection
-        self.cmd = "nmcli -t -f ssid,uuid con show --active"
-        self.output = subprocess.check_output(self.cmd, shell=True).decode("utf-8")
-        self.previous_ssid, self.previous_uuid = self.output.strip().split(':', 1)
+    def get_current_network(self):
+        cmd = ["iwgetid", "-r"]
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        output, error = process.communicate()
 
-        # Disconnect from the current network
-        self.cmd = f"sudo nmcli dev disconnect {self.interface}"
-        subprocess.run(self.cmd, shell=True)
+        if error is not None:
+            print(f"Error: {error}")
+            return None
 
-        # Connect to the new network
-        self.cmd = f"sudo nmcli dev wifi connect {self.network_ssid} password {self.network_password} iface {interface}"
-        self.result = subprocess.run(self.cmd, shell=True, stderr=subprocess.PIPE)
+        return output.strip()
+
+    def get_ssid_psk(self, config):
+        ssid_pattern = 'ssid="(.+?)"'
+        psk_pattern = 'psk="(.+?)"'
+
+        ssid = re.search(ssid_pattern, config)
+        psk = re.search(psk_pattern, config)
+
+        if ssid and psk:
+            return ssid.group(1), psk.group(1)
+        else:
+            return None, None
+
+    def connect_wifi(self, new_network_ssid, new_network_password):
+        # Save the current network configuration
+        with open("/etc/wpa_supplicant/wpa_supplicant.conf", "r") as wifi_config:
+            current_config = wifi_config.read()
+            current_ssid, current_psk = self.get_ssid_psk(current_config)
+
+            new_config = current_config
+            new_config = new_config.replace(current_ssid, new_network_ssid)
+            new_config = new_config.replace(current_psk, new_network_password)
+
+        # Write the new network configuration to wpa_supplicant.conf
+        with open("/etc/wpa_supplicant/wpa_supplicant.conf", "a") as wifi_config:
+            wifi_config.truncate(0)
+            wifi_config.write(new_config)
+            wifi_config.close()
+
+        # Restart the wpa_supplicant service to connect to the new network
+        cmd = ["sudo", "systemctl", "restart", "wpa_supplicant"]
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        output, error = process.communicate()
+
+        if error is not None:
+            print(f"Error: {error}")
+
+        cmd = ["sudo", "wpa_cli", "-i", "wlan0", "reconfigure"]
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        output, error = process.communicate()
+
+        if error is not None:
+            print(f"Error: {error}")
 
         # Check if the connection was successful
-        if self.result.returncode != 0:
-            print("Error: The password is incorrect or the network is unreachable.")
-            print("Reconnecting to the previous network...")
-            
-            # Reconnect to the previous network
-            self.cmd = f"sudo nmcli con up uuid {self.previous_uuid}"
-            subprocess.run(self.cmd, shell=True)
+        time.sleep(10)  # Wait for the connection to establish
 
-            # Wait for a few seconds to let the connection establish
-            time.sleep(5)
+        new_ssid = self.get_current_network().decode('utf-8').strip()
 
-        # Check the connection status
-        self.cmd = f"iwconfig {self.interface}"
-        self.output = subprocess.check_output(self.cmd, shell=True).decode("utf-8")
-        print(self.output)
+        if new_network_ssid != new_ssid:
+            print(
+                "Failed to connect to the new network. Reverting to the previous network configuration.")
+
+            # Revert to the previous network configuration
+            with open("/etc/wpa_supplicant/wpa_supplicant.conf", "w") as wifi_config:
+                wifi_config.truncate(0)
+                wifi_config.write(current_config)
+                wifi_config.close()
+
+            # Restart the wpa_supplicant service to reconnect to the previous network
+            cmd = ["sudo", "systemctl", "restart", "wpa_supplicant"]
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+            output, error = process.communicate()
+
+            if error is not None:
+                print(f"Error: {error}")
+
+            cmd = ["sudo", "wpa_cli", "-i", "wlan0", "reconfigure"]
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+            output, error = process.communicate()
+
+            if error is not None:
+                print(f"Error: {error}")
 
     def go_back(self):
         self.usb_window = USBWindow(self.stacked_widget)
@@ -1221,3 +1277,8 @@ class MyApp(QApplication):
 if __name__ == '__main__':
     app = MyApp()
     sys.exit(app.exec_())
+
+
+# Instructions/Commands
+# sudo chmod 777 /tmp
+# pip3 install pip3 install adafruit-circuitpython-pn532 pyserial escpos pytesseract cryptography==36.0.0 pdfplumber pdf2image

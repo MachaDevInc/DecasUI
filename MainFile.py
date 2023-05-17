@@ -410,17 +410,18 @@ class bluetoothWindow(QMainWindow):
         super().__init__()
         self.stacked_widget = stacked_widget
         loadUi('bluetooth.ui', self)
-        
-        nearby_devices = bluetooth.discover_devices(lookup_names=True)
-        print("Found {} devices.".format(len(nearby_devices)))
+
+        self.discovery_thread = BluetoothDiscoveryThread(self)
+        self.discovery_thread.device_discovered.connect(
+            self.add_bluetooth_item)
+        self.discovery_thread.start()
 
         self.back.clicked.connect(self.go_back)
-        for addr, name in nearby_devices:
-            print("  {} - {}".format(addr, name))
-            self.bluetooth1.addItems({name})
-
         # Connect the combo box's activated signal to a slot function
         self.bluetooth1.activated[str].connect(self.on_combobox_activated)
+
+    def add_bluetooth_item(self, name):
+        self.bluetooth1.addItem(name)
 
     def on_combobox_activated(self, text):
         print(f"Selected option: {text}")
@@ -436,6 +437,17 @@ class bluetoothWindow(QMainWindow):
     def open_virtual_keyboard(self):
         virtual_keyboard = VirtualKeyboard(self.update_text_edit)
         virtual_keyboard.mainloop()
+
+
+class BluetoothDiscoveryThread(QThread):
+    device_discovered = pyqtSignal(str)
+
+    def run(self):
+        nearby_devices = bluetooth.discover_devices(lookup_names=True)
+        print("Found {} devices.".format(len(nearby_devices)))
+        for addr, name in nearby_devices:
+            print("  {} - {}".format(addr, name))
+            self.device_discovered.emit(name)
 
 
 # Define similar classes for WifiWindow, RsWindow, and SetWindow

@@ -320,7 +320,7 @@ class WifiWindow(QMainWindow):
         loadUi('wifiset.ui', self)
 
         self.stacked_widget = stacked_widget
-
+        self._translate = QtCore.QCoreApplication.translate
         self.back.clicked.connect(self.go_back)
 
         self.password.clicked.connect(
@@ -351,7 +351,7 @@ class WifiWindow(QMainWindow):
 
     def add_wifi_item(self, name, devices):
         self.status.setText(self._translate(
-            "wifisetting", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" + devices + " networks found</span></p></body></html>"))
+            "wifisetting", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" + devices + " network(s) found</span></p></body></html>"))
         self.ssid.addItem(name)
 
     def on_combobox_activated(self, text):
@@ -497,13 +497,17 @@ class WiFiDiscoveryThread(QThread):
         cmd = f"iwlist {interface} scan"
         output = subprocess.check_output(cmd, shell=True).decode("utf-8")
         lines = output.split("\n")
-        devices = str(len(lines))
+        networks = []
 
         for line in lines:
             line = line.strip()
             if "ESSID" in line:
-                ssid = line.split(":")[1].strip('"')
-                self.device_discovered.emit(ssid, devices)
+                networks.append(line.split(":")[1].strip('"'))
+        devices = str(len(networks))
+
+        for network in networks:
+            ssid = network
+            self.device_discovered.emit(ssid, devices)
 
 
 class BluetoothDiscoveryThread(QThread):

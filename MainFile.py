@@ -414,7 +414,7 @@ class bluetoothWindow(QMainWindow):
         self.status.setText("Scanning...Please wait!")
         self.discovery_thread = BluetoothDiscoveryThread(self)
         self.discovery_thread.device_discovered.connect(
-            self.add_bluetooth_item, self.scanned_devices)
+            self.add_bluetooth_item)
         self.discovery_thread.start()
 
         self.refresh.clicked.connect(self.refresh_bluetooth_scan)
@@ -426,11 +426,11 @@ class bluetoothWindow(QMainWindow):
         self.status.setText("Scanning...Please wait!")
         self.discovery_thread = BluetoothDiscoveryThread(self)
         self.discovery_thread.device_discovered.connect(
-            self.add_bluetooth_item, self.scanned_devices)
+            self.add_bluetooth_item)
         self.discovery_thread.start()
 
-    def add_bluetooth_item(self, name):
-        self.status.setText(self.scanned_devices)
+    def add_bluetooth_item(self, name, devices):
+        self.status.setText(self.devices + "devices found")
         self.bluetooth1.addItem(name)
 
     def on_combobox_activated(self, text):

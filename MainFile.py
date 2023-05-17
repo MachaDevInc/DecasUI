@@ -321,6 +321,7 @@ class WifiWindow(QMainWindow):
 
         self.stacked_widget = stacked_widget
         self._translate = QtCore.QCoreApplication.translate
+        self.confirm.clicked.connect(self.done)
         self.back.clicked.connect(self.go_back)
 
         self.password.clicked.connect(
@@ -355,12 +356,52 @@ class WifiWindow(QMainWindow):
         self.ssid.addItem(name)
 
     def on_combobox_activated(self, text):
+        self.ssid = text
         print(f"Selected option: {text}")
 
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
         self.date.setPlainText(f" {shared_data.date}")
+        
+    def done(self):
+        self.network_password = self.textEdit1.toPlainText()
+        print(self.network_password)
+        # The SSID and password for the Wi-Fi network
+        self.network_ssid = "your_network_ssid"
+
+        # The network interface (you might need to change this)
+        self.interface = "wlan0"
+
+        # Save the previous connection
+        self.cmd = "nmcli -t -f ssid,uuid con show --active"
+        self.output = subprocess.check_output(self.cmd, shell=True).decode("utf-8")
+        self.previous_ssid, self.previous_uuid = self.output.strip().split(':', 1)
+
+        # Disconnect from the current network
+        self.cmd = f"sudo nmcli dev disconnect {self.interface}"
+        subprocess.run(self.cmd, shell=True)
+
+        # Connect to the new network
+        self.cmd = f"sudo nmcli dev wifi connect {self.network_ssid} password {self.network_password} iface {interface}"
+        self.result = subprocess.run(self.cmd, shell=True, stderr=subprocess.PIPE)
+
+        # Check if the connection was successful
+        if self.result.returncode != 0:
+            print("Error: The password is incorrect or the network is unreachable.")
+            print("Reconnecting to the previous network...")
+            
+            # Reconnect to the previous network
+            self.cmd = f"sudo nmcli con up uuid {self.previous_uuid}"
+            subprocess.run(self.cmd, shell=True)
+
+            # Wait for a few seconds to let the connection establish
+            time.sleep(5)
+
+        # Check the connection status
+        self.cmd = f"iwconfig {self.interface}"
+        self.output = subprocess.check_output(self.cmd, shell=True).decode("utf-8")
+        print(self.output)
 
     def go_back(self):
         self.usb_window = USBWindow(self.stacked_widget)

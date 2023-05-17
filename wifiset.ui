@@ -33,7 +33,7 @@
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QPushButton" name="done">
+   <widget class="QPushButton" name="confirm">
     <property name="geometry">
      <rect>
       <x>780</x>

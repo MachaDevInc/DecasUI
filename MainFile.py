@@ -7,16 +7,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedWidg
 from PyQt5.uic import loadUi
 import time
 from PyQt5.QtCore import QTimer, QTime, QDate
-from Ready import Ui_MainWindow2
-from inset import Ui_MainWindow7
-from wifiset import Ui_wifisetting
-from usbset import Ui_usbsetting
-from RSset import Ui_RS485
 import subprocess
-from w3 import Ui_MainWindow3
-from W4 import Ui_MainWindow4
-from w5 import Ui_MainWindow5
-from w6 import Ui_MainWindow6
 
 import board
 import busio
@@ -35,6 +26,8 @@ import pdfplumber
 from pdf2image import convert_from_path
 
 import uuid
+
+import bluetooth
 
 proc1 = subprocess.Popen(["python", "progress bar.py"])
 time.sleep(1)
@@ -417,9 +410,14 @@ class bluetoothWindow(QMainWindow):
         super().__init__()
         self.stacked_widget = stacked_widget
         loadUi('bluetooth.ui', self)
+        
+        nearby_devices = bluetooth.discover_devices(lookup_names=True)
+        print("Found {} devices.".format(len(nearby_devices)))
 
         self.back.clicked.connect(self.go_back)
-        self.bluetooth1.addItems(["Device1", "Device2 ", "Device3"])
+        for addr, name in nearby_devices:
+            print("  {} - {}".format(addr, name))
+            self.bluetooth1.addItems({name})
 
         # Connect the combo box's activated signal to a slot function
         self.bluetooth1.activated[str].connect(self.on_combobox_activated)

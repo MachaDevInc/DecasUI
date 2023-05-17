@@ -27,6 +27,7 @@ import pdfplumber
 from pdf2image import convert_from_path
 
 import uuid
+import socket
 
 import bluetooth
 
@@ -256,7 +257,7 @@ class USBWindow(QMainWindow):
         self.hide()
 
     def open_about(self):
-        self.about_window = aboutWindow()
+        self.about_window = aboutWindow(self.stacked_widget)
         self.about_window.showFullScreen()
         self.hide()
 
@@ -277,16 +278,37 @@ class USBWindow(QMainWindow):
 
 
 class aboutWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, stacked_widget):
         super().__init__()
+        self.stacked_widget = stacked_widget
         loadUi('About.ui', self)
 
+        self.mac.setPlainText(self.get_mac_address())
+        self.ip.setPlainText(self.get_local_ip_address('8.8.8.8'))
         self.back.clicked.connect(self.go_back)
+        # Google's DNS as target to get the local ip
+        print(self.get_local_ip_address('8.8.8.8'))
 
     def go_back(self):
         self.setting_window = SettingWindow(self.stacked_widget)
         self.setting_window.showFullScreen()
         self.hide()
+
+    def get_mac_address(self):
+        mac_num = hex(uuid.getnode()).replace('0x', '').upper()
+        mac = '-'.join(mac_num[i: i + 2] for i in range(0, 11, 2))
+        return mac
+
+    def get_local_ip_address(target):
+        ip_address = ''
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect((target, 1))
+            ip_address = s.getsockname()[0]
+            s.close()
+        except Exception as e:
+            print("Error: %s" % e)
+        return ip_address
 
 
 class WifiWindow(QMainWindow):

@@ -281,10 +281,13 @@ class aboutWindow(QMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
         self.stacked_widget = stacked_widget
+        self._translate = QtCore.QCoreApplication.translate
         loadUi('About.ui', self)
 
-        self.mac.setPlainText(self.get_mac_address())
-        self.ip.setPlainText(self.get_local_ip_address('8.8.8.8'))
+        self.mac.setText(self._translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" +
+                                         self.get_mac_address() + " devices found</span></p></body></html>"))
+        self.ip.setText(self._translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" +
+                                        self.get_local_ip_address('8.8.8.8') + " devices found</span></p></body></html>"))
         self.back.clicked.connect(self.go_back)
         # Google's DNS as target to get the local ip
         print(self.get_local_ip_address('8.8.8.8'))
@@ -299,7 +302,7 @@ class aboutWindow(QMainWindow):
         mac = '-'.join(mac_num[i: i + 2] for i in range(0, 11, 2))
         return mac
 
-    def get_local_ip_address(target):
+    def get_local_ip_address(self, target):
         ip_address = ''
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -435,7 +438,8 @@ class bluetoothWindow(QMainWindow):
         self._translate = QtCore.QCoreApplication.translate
         loadUi('bluetooth.ui', self)
 
-        self.status.setText(self._translate("bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
+        self.status.setText(self._translate(
+            "bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
         self.discovery_thread = BluetoothDiscoveryThread(self)
         self.discovery_thread.device_discovered.connect(
             self.add_bluetooth_item)
@@ -448,14 +452,16 @@ class bluetoothWindow(QMainWindow):
 
     def refresh_bluetooth_scan(self):
         self.bluetooth1.clear()
-        self.status.setText(self._translate("bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
+        self.status.setText(self._translate(
+            "bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
         self.discovery_thread = BluetoothDiscoveryThread(self)
         self.discovery_thread.device_discovered.connect(
             self.add_bluetooth_item)
         self.discovery_thread.start()
 
     def add_bluetooth_item(self, name, devices):
-        self.status.setText(self._translate("bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" + devices + " devices found</span></p></body></html>"))
+        self.status.setText(self._translate(
+            "bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" + devices + " devices found</span></p></body></html>"))
         self.bluetooth1.addItem(name)
 
     def on_combobox_activated(self, text):

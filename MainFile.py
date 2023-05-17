@@ -411,20 +411,26 @@ class bluetoothWindow(QMainWindow):
         self.stacked_widget = stacked_widget
         loadUi('bluetooth.ui', self)
 
+        self.status.setText("Scanning...Please wait!")
+        self.discovery_thread = BluetoothDiscoveryThread(self)
+        self.discovery_thread.device_discovered.connect(
+            self.add_bluetooth_item, self.scanned_devices)
+        self.discovery_thread.start()
+
         self.refresh.clicked.connect(self.refresh_bluetooth_scan)
         self.back.clicked.connect(self.go_back)
         # Connect the combo box's activated signal to a slot function
         self.bluetooth1.activated[str].connect(self.on_combobox_activated)
 
     def refresh_bluetooth_scan(self):
-        self.status.setPlainText("Scanning...Please wait!")
+        self.status.setText("Scanning...Please wait!")
         self.discovery_thread = BluetoothDiscoveryThread(self)
         self.discovery_thread.device_discovered.connect(
             self.add_bluetooth_item, self.scanned_devices)
         self.discovery_thread.start()
 
     def add_bluetooth_item(self, name):
-        self.status.setPlainText(self.scanned_devices)
+        self.status.setText(self.scanned_devices)
         self.bluetooth1.addItem(name)
 
     def on_combobox_activated(self, text):

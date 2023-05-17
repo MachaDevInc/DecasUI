@@ -285,9 +285,9 @@ class aboutWindow(QMainWindow):
         loadUi('About.ui', self)
 
         self.mac.setText(self._translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" +
-                                         self.get_mac_address() + " devices found</span></p></body></html>"))
+                                         self.get_mac_address() + "</span></p></body></html>"))
         self.ip.setText(self._translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" +
-                                        self.get_local_ip_address('8.8.8.8') + " devices found</span></p></body></html>"))
+                                        self.get_local_ip_address('8.8.8.8') + "</span></p></body></html>"))
         self.back.clicked.connect(self.go_back)
         # Google's DNS as target to get the local ip
         print(self.get_local_ip_address('8.8.8.8'))

@@ -484,9 +484,11 @@
     <property name="font">
      <font>
       <pointsize>24</pointsize>
-      <weight>75</weight>
       <bold>true</bold>
      </font>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QTextEdit" name="username">
@@ -538,7 +540,6 @@
     <property name="font">
      <font>
       <pointsize>16</pointsize>
-      <weight>75</weight>
       <bold>true</bold>
      </font>
     </property>
@@ -559,7 +560,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>21</height>
+     <height>17</height>
     </rect>
    </property>
   </widget>

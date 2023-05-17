@@ -1,4 +1,5 @@
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
+from PyQt5 import QtCore
 import sys
 import os
 import subprocess
@@ -409,9 +410,10 @@ class bluetoothWindow(QMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
         self.stacked_widget = stacked_widget
+        self._translate = QtCore.QCoreApplication.translate
         loadUi('bluetooth.ui', self)
 
-        self.status.setText("Scanning...Please wait!")
+        self.status.setText(self._translate("bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
         self.discovery_thread = BluetoothDiscoveryThread(self)
         self.discovery_thread.device_discovered.connect(
             self.add_bluetooth_item)
@@ -423,14 +425,14 @@ class bluetoothWindow(QMainWindow):
         self.bluetooth1.activated[str].connect(self.on_combobox_activated)
 
     def refresh_bluetooth_scan(self):
-        self.status.setText("Scanning...Please wait!")
+        self.status.setText(self._translate("bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
         self.discovery_thread = BluetoothDiscoveryThread(self)
         self.discovery_thread.device_discovered.connect(
             self.add_bluetooth_item)
         self.discovery_thread.start()
 
     def add_bluetooth_item(self, name, devices):
-        self.status.setText(self.devices + "devices found")
+        self.status.setText(self._translate("bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">"devices " devices found</span></p></body></html>"))
         self.bluetooth1.addItem(name)
 
     def on_combobox_activated(self, text):

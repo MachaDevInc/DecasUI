@@ -10,6 +10,8 @@ import time
 from PyQt5.QtCore import QTimer, QTime, QDate
 import subprocess
 
+from Ui_Work import JobsMainWindow
+
 import board
 import busio
 import serial
@@ -204,11 +206,11 @@ class connectionWindow(QMainWindow):
         self.hide()
 
 
-class workWindow(QMainWindow):
+class workWindow(JobsMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
         self.stacked_widget = stacked_widget
-        loadUi('Work.ui', self)
+        self.setupUi(self)
 
         self.back.clicked.connect(self.go_back)
 
@@ -889,19 +891,19 @@ class ProcessingThread(QThread):
         if match:
             if '/' in match.group():
                 info['Date'] = (datetime.strptime(
-                    match.group(), "%d/%m/%Y").date())
+                    match.group(), "%d/%m/%Y").date()).isoformat()
             elif '-' in match.group():
                 info['Date'] = (datetime.strptime(
-                    match.group(), "%d-%m-%Y").date())
+                    match.group(), "%d-%m-%Y").date()).isoformat()
             elif ',' in match.group() and ' ' not in match.group():
                 info['Date'] = (datetime.strptime(
-                    match.group(), "%d,%b,%Y").date())
+                    match.group(), "%d,%b,%Y").date()).isoformat()
             elif ',' in match.group() and ' ' in match.group():
                 info['Date'] = (datetime.strptime(
-                    match.group(), "%d %b, %Y").date())
+                    match.group(), "%d %b, %Y").date()).isoformat()
             elif ' ' in match.group() and ',' not in match.group():
                 info['Date'] = (datetime.strptime(
-                    match.group(), "%d %b %Y").date())
+                    match.group(), "%d %b %Y").date()).isoformat()
 
         return info
 
@@ -940,7 +942,7 @@ class ProcessingThread(QThread):
         self.date = date
         self.receipt_number = receipt_number
         self.payload = payload
-        self.response = response
+        self.response = response.text
         return response.text
 
     def decode_response(self, response_text):
@@ -1024,7 +1026,7 @@ class SettingsWindow1(QMainWindow):
         self.stacked_widget = stacked_widget
         self.file_path = file_path
         self.next1.clicked.connect(self.open_keyboard)
-        self.Retreive.clicked.connect(self.next_settings5)
+        self.Retreive.clicked.connect(self.print_retrieval_code)
 
         # Barcode
         self.serial_port = "/dev/ttySC0"
@@ -1076,7 +1078,7 @@ class SettingsWindow1(QMainWindow):
         index = self.stacked_widget.indexOf(self.numeric_keyboard)
         self.stacked_widget.setCurrentIndex(index)
 
-    def next_settings5(self):
+    def print_retrieval_code(self):
         self.scanThread.stop()
         self.PrintRetrievalCode_window = PrintRetrievalCode(
             self.file_path, self.stacked_widget, self.scanThread)
@@ -1242,15 +1244,16 @@ class PrintRetrievalCode(QMainWindow):
         self.code = retrieval_code
         self.data_sent = data_sent
         if self.data_sent:
-            # use the remove() function to delete the file
-            os.remove(self.file_path)
-            self.thermal_print()
-            print("Processing finished!")
-            print(self.code)
+            pass
+        # use the remove() function to delete the file
+        os.remove(self.file_path)
+        # self.thermal_print()
+        print("Processing finished!")
+        print(self.code)
 
-            self.timer = QTimer()
-            self.timer.timeout.connect(self.go_home)
-            self.timer.start(500)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.go_home)
+        self.timer.start(500)
 
     def thermal_print(self):
         p = Serial(devfile='/dev/ttySC1',

@@ -219,7 +219,7 @@ class workWindow(JobsMainWindow):
 
         # Set the window size
         self.resize(1024, 600)
-        
+
         self.show_jobs()
         self.back.clicked.connect(self.go_back)
 
@@ -248,8 +248,9 @@ class workWindow(JobsMainWindow):
             for value in jobs.values():
                 # Add custom widgets to the scroll area content layout
                 for i in range(10):
-                    data = f""  # Replace this with your actual data
-                    if i == 5:
+                    # Replace this with your actual data
+                    data = value["job_title"]
+                    if value["data_sent"] is True:
                         widget = CustomWidget(
                             f"", data, self.central_widget, False)
                     else:
@@ -804,6 +805,9 @@ class ProcessingThread(QThread):
 
         print(self.deviceID)
         print("\n\n")
+
+        self.job_title = info['Invoice Number'] + \
+            "\n" + info['Email'] + "\n" + str(items)
 
         # (data, receiver, company_name, company_address, company_phone, date, device_id, receipt_number)
         get_response = self.send_api_data(api_data, self.userID, "N2R Technologies3", address,

@@ -22,7 +22,7 @@ class CustomWidget(QWidget):
         font.setWeight(60)
         self.label = QLabel()
         self.label.setText(data)  # Set the dynamic data here
-        self.label.setFixedWidth(730)
+        self.label.setFixedWidth(780)
         self.layout.addWidget(self.label)
         self.label.setFont(font)
         self.label.setText("Bilal\n\nAwan\n\nBilal\n\nAwan")

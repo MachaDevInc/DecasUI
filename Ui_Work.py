@@ -29,9 +29,8 @@ class CustomWidget(QWidget):
             icon.addPixmap(QtGui.QPixmap("pics/retry.png"),
                            QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.button.setIcon(icon)
-            self.button.setIconSize(QSize(350, 50))  # Set the size of the icon
-            # Set the fixed size of the button
-            self.button.setFixedSize(QSize(150, 40))
+            self.button.setIconSize(QSize(150, 60))  # Set the size of the icon
+            self.button.setFixedSize(QSize(150, 60))  # Set the fixed size of the button to match the icon size
             self.button.setFlat(True)
 
             # Create a QHBoxLayout for the button

@@ -4,8 +4,9 @@ from PyQt5 import QtGui
 
 
 class CustomWidget(QWidget):
-    def __init__(self, text, data, button_needed=False, parent=None):
+    def __init__(self, text, data, central_widget, button_needed=False, parent=None):
         super(CustomWidget, self).__init__(parent)
+        self.central_widget = central_widget
         # Set CustomWidget background to be transparent
         # white background with alpha = 100
         self.setStyleSheet("background-color: rgba(255, 255, 255, 100);")
@@ -22,8 +23,8 @@ class CustomWidget(QWidget):
 
         # create button if button_needed is True
         if button_needed:
-            self.button = QPushButton()
-            self.button.setStyleSheet("background-color:transparent;")
+            self.button = QPushButton(self.central_widget)
+            # self.button.setStyleSheet("background-color:transparent;")
             icon = QtGui.QIcon()
             icon.addPixmap(QtGui.QPixmap("pics/retry.png"),
                            QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -31,6 +32,7 @@ class CustomWidget(QWidget):
             self.button.setIconSize(QSize(350, 50))  # Set the size of the icon
             # Set the fixed size of the button
             self.button.setFixedSize(QSize(150, 40))
+            self.button.setFlat(True)
 
             # Create a QHBoxLayout for the button
             button_layout = QHBoxLayout()
@@ -93,9 +95,9 @@ class JobsMainWindow(QMainWindow):
         for i in range(10):
             data = f""  # Replace this with your actual data
             if i == 5:
-                widget = CustomWidget(f"", data, False)
+                widget = CustomWidget(f"", data, self.central_widget, False)
             else:
-                widget = CustomWidget(f"", data, True)
+                widget = CustomWidget(f"", data, self.central_widget, True)
             self.scroll_layout.addWidget(widget)
 
         self.back = QPushButton(self.centralwidget)

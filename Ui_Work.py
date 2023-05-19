@@ -23,13 +23,14 @@ class CustomWidget(QWidget):
         # create button if button_needed is True
         if button_needed:
             self.button = QPushButton()
+            self.button.setStyleSheet("background-color:transparent;")
             icon = QtGui.QIcon()
             icon.addPixmap(QtGui.QPixmap("pics/retry.png"),
                            QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.button.setIcon(icon)
             self.button.setIconSize(QSize(350, 50))  # Set the size of the icon
             # Set the fixed size of the button
-            self.button.setFixedSize(QSize(150, 50))
+            self.button.setFixedSize(QSize(150, 40))
 
             # Create a QHBoxLayout for the button
             button_layout = QHBoxLayout()

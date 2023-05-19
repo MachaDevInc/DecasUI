@@ -25,7 +25,6 @@ class CustomWidget(QWidget):
         self.label.setFixedWidth(780)
         self.layout.addWidget(self.label)
         self.label.setFont(font)
-        self.label.setText("Bilal\n\nAwan\n\nBilal\n\nAwan")
 
         # create button if button_needed is True
         if button_needed:

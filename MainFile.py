@@ -805,7 +805,7 @@ class ProcessingThread(QThread):
         print("\n\n")
 
         self.job_title = info['Invoice Number'] + \
-            "\n" + info['Email'] + "\n" + str(items)
+            "\n" + info['Email'] + "\n" + receipt_text
 
         # (data, receiver, company_name, company_address, company_phone, date, device_id, receipt_number)
         get_response = self.send_api_data(api_data, self.userID, "N2R Technologies3", address,

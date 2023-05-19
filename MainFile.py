@@ -171,8 +171,8 @@ class SettingWindow(QMainWindow):
             self.stacked_widget, file_path)
         self.stacked_widget.addWidget(self.SettingsWindow1_window)
         self.stacked_widget.setCurrentWidget(self.SettingsWindow1_window)
-        # self.stacked_widget.removeWidget(self.setting_window)
         self.timer.stop()
+        self.hide()
 
     def open_next(self):
         self.usb_window = USBWindow(self.stacked_widget)
@@ -686,11 +686,22 @@ class ProcessingThread(QThread):
     # Signal emitted when thread finishes
     finished_signal = pyqtSignal(str, bool)
 
-    def __init__(self, file_path, userID):
+    def __init__(self, file_path, userID, retry=False):
         super().__init__()
         self.file_path = file_path
         self.userID = userID
+        self.retry = retry
         self.data_sent = False
+        self.job_title = ""
+        self.receiver = ""
+        self.company_name = ""
+        self.company_address = ""
+        self.company_phone = ""
+        self.date = ""
+        self.receipt_number = ""
+        self.payload = ""
+        self.response = ""
+        self.response_code = ""
         self.url = "http://filesharing.n2rtech.com/api/send-data?"
 
     def run(self):
@@ -741,6 +752,8 @@ class ProcessingThread(QThread):
         get_response = self.send_api_data(api_data, self.userID, "N2R Technologies3", address,
                                           info['Phone Number'], info['Date'], self.deviceID, info['Invoice Number'])
         self.decode_response(get_response)
+
+        self.update_jobs_dict()
 
         # Emit signal when processing is done
         self.finished_signal.emit(self.retrieval_code, self.data_sent)
@@ -920,20 +933,30 @@ class ProcessingThread(QThread):
         response = requests.request(
             "POST", self.url, headers=headers, data=payload, files=files)
 
+        self.receiver = receiver
+        self.company_name = company_name
+        self.company_address = company_address
+        self.company_phone = company_phone
+        self.date = date
+        self.receipt_number = receipt_number
+        self.payload = payload
+        self.response = response
         return response.text
 
     def decode_response(self, response_text):
         # Parse the JSON string into a Python dictionary
-        parsed_data = json.loads(response_text)
+        self.parsed_data = json.loads(response_text)
 
         # Check if 'success' or 'error' key exists in the parsed data
-        if 'success' in parsed_data:
+        if 'success' in self.parsed_data:
+            self.response_code = "success"
             self.data_sent = True
             print("Data uploaded successfully to API.")
 
-        elif 'error' in parsed_data:
-            error = parsed_data['error']
-            response_message = parsed_data['response']
+        elif 'error' in self.parsed_data:
+            error = self.parsed_data['error']
+            self.response_code = "error: " + str(error)
+            response_message = self.parsed_data['response']
 
             # Print the error message
             print(f"Error: {error}")
@@ -942,12 +965,56 @@ class ProcessingThread(QThread):
         else:
             print("Unexpected response format.")
 
-        if 'CODE' in parsed_data:
-            code = parsed_data['CODE']
+        if 'CODE' in self.parsed_data:
+            code = self.parsed_data['CODE']
 
             # Print the extracted values
             print(f"CODE: {code}")
             self.retrieval_code = str(code)
+
+    def update_jobs_dict(self):
+        jobs = {}
+        i = 0
+
+        try:
+            # Read the file
+            with open('my_jobs.json', 'r') as f:
+                jobs = json.load(f)  # This will give you a dictionary
+                # Get the size of the dictionary
+                size = len(jobs)
+                print(f"The dictionary contains {size} key-value pairs.")
+        except json.JSONDecodeError:
+            print("File is not valid JSON")
+        except FileNotFoundError:
+            print("File 'my_jobs.json' not found.")
+
+        if jobs:
+            # Get the last key-value pair added
+            last_key, last_value = next(reversed(jobs.items()))
+            print(f"Last key: {last_key}, last value: {last_value}")
+            i = int(last_key)
+
+        if (self.retry is not True):
+            i += 1
+
+            if i != 0:
+                jobs[i] = {}
+                jobs[i]["data_sent"] = self.data_sent
+                jobs[i]["job_title"] = self.job_title
+                jobs[i]["receiver"] = self.receiver
+                jobs[i]["company_name"] = self.company_name
+                jobs[i]["company_address"] = self.company_address
+                jobs[i]["company_phone"] = self.company_phone
+                jobs[i]["date"] = self.date
+                jobs[i]["receipt_number"] = self.receipt_number
+                jobs[i]["payload"] = self.payload
+                jobs[i]["response"] = self.response
+                jobs[i]["response_code"] = self.response_code
+
+            # print(jobs)
+            # Write the updated dictionary back to the file
+            with open('my_jobs.json', 'w') as f:
+                json.dump(jobs, f)
 
 
 class SettingsWindow1(QMainWindow):

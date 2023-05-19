@@ -12,32 +12,36 @@ class CustomWidget(QWidget):
         self.setStyleSheet("background-color: rgba(255, 255, 255, 100);")
 
         # set layout
-        self.layout = QVBoxLayout()
+        self.layout = QHBoxLayout()
+        self.layout.setAlignment(Qt.AlignLeft)
         self.setLayout(self.layout)
 
         # create text edit
-        self.text_edit = QTextEdit()
-        self.text_edit.setReadOnly(True)
-        self.text_edit.setText(data)  # Set the dynamic data here
-        self.layout.addWidget(self.text_edit)
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        font.setWeight(60)
+        self.label = QLabel()
+        self.label.setText(data)  # Set the dynamic data here
+        self.label.setFixedWidth(730)
+        self.layout.addWidget(self.label)
+        self.label.setFont(font)
+        self.label.setText("Bilal\n\nAwan\n\nBilal\n\nAwan")
 
         # create button if button_needed is True
         if button_needed:
-            self.button = QPushButton(self.central_widget)
-            # self.button.setStyleSheet("background-color:transparent;")
+            self.button = QPushButton()
             icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap("pics/retry.png"),
-                           QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            icon.addPixmap(QtGui.QPixmap("pics/retry.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.button.setIcon(icon)
-            self.button.setIconSize(QSize(150, 60))  # Set the size of the icon
-            self.button.setFixedSize(QSize(150, 60))  # Set the fixed size of the button to match the icon size
+            self.button.setIconSize(QSize(100, 50))  # Set the size of the icon
+            self.button.setFixedSize(QSize(100, 50))  # Set the fixed size of the button to match the icon size
             self.button.setFlat(True)
 
             # Create a QHBoxLayout for the button
             button_layout = QHBoxLayout()
             button_layout.addStretch(1)
+            button_layout.setAlignment(Qt.AlignBottom)
             button_layout.addWidget(self.button)
-            button_layout.addStretch(1)
 
             # Add the button layout to the main layout
             self.layout.addLayout(button_layout)
@@ -72,7 +76,7 @@ class JobsMainWindow(QMainWindow):
 
         # Create a central widget
         self.central_widget = QWidget(self.centralwidget)
-        self.central_widget.setGeometry(QRect(40, 90, 951, 410))
+        self.central_widget.setGeometry(QRect(30, 70, 964, 400))
 
         # Create a QVBoxLayout
         self.layout = QVBoxLayout(self.central_widget)

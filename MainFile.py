@@ -11,6 +11,7 @@ from PyQt5.QtCore import QTimer, QTime, QDate
 import subprocess
 
 from Ui_Work import JobsMainWindow
+from Ui_Work import CustomWidget
 
 import board
 import busio
@@ -218,6 +219,8 @@ class workWindow(JobsMainWindow):
 
         # Set the window size
         self.resize(1024, 600)
+        
+        self.show_jobs()
         self.back.clicked.connect(self.go_back)
 
     def go_back(self):
@@ -247,10 +250,10 @@ class workWindow(JobsMainWindow):
                 for i in range(10):
                     data = f""  # Replace this with your actual data
                     if i == 5:
-                        widget = self.CustomWidget(
+                        widget = CustomWidget(
                             f"", data, self.central_widget, False)
                     else:
-                        widget = self.CustomWidget(
+                        widget = CustomWidget(
                             f"", data, self.central_widget, True)
                     self.scroll_layout.addWidget(widget)
 

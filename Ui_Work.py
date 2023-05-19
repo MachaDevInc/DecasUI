@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenuBar, QStatusBar, QPushButton, QApplication, QMainWindow, QScrollArea, QTextEdit
-from PyQt5.QtCore import QSize, QRect, QMetaObject, QCoreApplication
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenuBar, QStatusBar, QPushButton, QMainWindow, QScrollArea
+from PyQt5.QtCore import QSize, QRect, QMetaObject, QCoreApplication, Qt
 from PyQt5 import QtGui
 
 
@@ -31,10 +31,12 @@ class CustomWidget(QWidget):
         if button_needed:
             self.button = QPushButton()
             icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap("pics/retry.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            icon.addPixmap(QtGui.QPixmap("pics/retry.png"),
+                           QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.button.setIcon(icon)
             self.button.setIconSize(QSize(100, 50))  # Set the size of the icon
-            self.button.setFixedSize(QSize(100, 50))  # Set the fixed size of the button to match the icon size
+            # Set the fixed size of the button to match the icon size
+            self.button.setFixedSize(QSize(100, 50))
             self.button.setFlat(True)
 
             # Create a QHBoxLayout for the button
@@ -93,15 +95,6 @@ class JobsMainWindow(QMainWindow):
 
         # Create a QVBoxLayout for the scroll area content
         self.scroll_layout = QVBoxLayout(self.scroll_content)
-
-        # Add custom widgets to the scroll area content layout
-        for i in range(10):
-            data = f""  # Replace this with your actual data
-            if i == 5:
-                widget = CustomWidget(f"", data, self.central_widget, False)
-            else:
-                widget = CustomWidget(f"", data, self.central_widget, True)
-            self.scroll_layout.addWidget(widget)
 
         self.back = QPushButton(self.centralwidget)
         self.back.setGeometry(QRect(50, 480, 75, 75))

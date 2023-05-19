@@ -154,6 +154,9 @@ class SettingWindow(QMainWindow):
         super().__init__()
         loadUi('Ready.ui', self)
 
+        # Set the window size
+        self.resize(1024, 600)
+
         self.stacked_widget = stacked_widget
         self.setting.clicked.connect(self.open_next)
         self.connection.clicked.connect(self.open_connection)
@@ -198,6 +201,8 @@ class connectionWindow(QMainWindow):
         self.stacked_widget = stacked_widget
         loadUi('connection.ui', self)
 
+        # Set the window size
+        self.resize(1024, 600)
         self.back.clicked.connect(self.go_back)
 
     def go_back(self):
@@ -211,6 +216,8 @@ class workWindow(JobsMainWindow):
         super().__init__()
         self.stacked_widget = stacked_widget
 
+        # Set the window size
+        self.resize(1024, 600)
         self.back.clicked.connect(self.go_back)
 
     def go_back(self):
@@ -218,12 +225,43 @@ class workWindow(JobsMainWindow):
         self.setting_window.showFullScreen()
         self.hide()
 
+    def show_jobs(self):
+        jobs = {}
+        i = 0
+
+        try:
+            # Read the file
+            with open('my_jobs.json', 'r') as f:
+                jobs = json.load(f)  # This will give you a dictionary
+                # Get the size of the dictionary
+                size = len(jobs)
+                print(f"The dictionary contains {size} key-value pairs.")
+        except json.JSONDecodeError:
+            print("File is not valid JSON")
+        except FileNotFoundError:
+            print("File 'my_jobs.json' not found.")
+
+        if jobs:
+            for value in jobs.values():
+                # Add custom widgets to the scroll area content layout
+                for i in range(10):
+                    data = f""  # Replace this with your actual data
+                    if i == 5:
+                        widget = self.CustomWidget(
+                            f"", data, self.central_widget, False)
+                    else:
+                        widget = self.CustomWidget(
+                            f"", data, self.central_widget, True)
+                    self.scroll_layout.addWidget(widget)
+
 
 class USBWindow(QMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
         loadUi('inset.ui', self)
 
+        # Set the window size
+        self.resize(1024, 600)
         self.stacked_widget = stacked_widget
         self.wifi_window = WifiWindow(self.stacked_widget)
         self.back.clicked.connect(self.go_back)
@@ -285,6 +323,9 @@ class aboutWindow(QMainWindow):
         self._translate = QtCore.QCoreApplication.translate
         loadUi('About.ui', self)
 
+        # Set the window size
+        self.resize(1024, 600)
+
         self.mac.setText(self._translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" +
                                          self.get_mac_address() + "</span></p></body></html>"))
         self.ip.setText(self._translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" +
@@ -319,6 +360,9 @@ class WifiWindow(QMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
         loadUi('wifiset.ui', self)
+
+        # Set the window size
+        self.resize(1024, 600)
 
         self.network_ssid = ""
         self.network_password = ""
@@ -480,6 +524,9 @@ class RSWindow(QMainWindow):
         self.stacked_widget = stacked_widget
         loadUi('RSset.ui', self)
 
+        # Set the window size
+        self.resize(1024, 600)
+
         self.back.clicked.connect(self.go_back)
         self.address.clicked.connect(
             lambda: self.open_virtual_keyboard(self.textEdit))
@@ -516,6 +563,9 @@ class usbWindow(QMainWindow):
         self.stacked_widget = stacked_widget
         loadUi('usbset.ui', self)
 
+        # Set the window size
+        self.resize(1024, 600)
+
         self.back.clicked.connect(self.go_back)
         self.comport.addItems(["COM1", "COM2", "COM3", "COM4", "COM5", "COM6"])
 
@@ -544,6 +594,9 @@ class bluetoothWindow(QMainWindow):
         self.stacked_widget = stacked_widget
         self._translate = QtCore.QCoreApplication.translate
         loadUi('bluetooth.ui', self)
+
+        # Set the window size
+        self.resize(1024, 600)
 
         self.status.setText(self._translate(
             "bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
@@ -1022,6 +1075,10 @@ class SettingsWindow1(QMainWindow):
     def __init__(self, stacked_widget, file_path):
         super().__init__()
         loadUi('w3.ui', self)
+
+        # Set the window size
+        self.resize(1024, 600)
+
         self.stacked_widget = stacked_widget
         self.file_path = file_path
         self.next1.clicked.connect(self.open_keyboard)
@@ -1090,6 +1147,10 @@ class NumericKeyboard(QMainWindow):
     def __init__(self, parent, stacked_widget, numeric_keyboard, scanThread, file_path):
         super(NumericKeyboard, self).__init__()
         loadUi('W4.ui', self)
+
+        # Set the window size
+        self.resize(1024, 600)
+
         self.parent = parent
         self.stacked_widget = stacked_widget
         self.file_path = file_path
@@ -1208,6 +1269,10 @@ class DataSentWindow(QMainWindow):
     def __init__(self, file_path, stacked_widget, scanThread):
         super().__init__()
         loadUi('w6.ui', self)
+
+        # Set the window size
+        self.resize(1024, 600)
+
         self.file_path = file_path
         self.stacked_widget = stacked_widget
         self.scanThread = scanThread
@@ -1228,6 +1293,10 @@ class PrintRetrievalCode(QMainWindow):
     def __init__(self, file_path, stacked_widget, scanThread):
         super().__init__()
         loadUi('w5.ui', self)
+
+        # Set the window size
+        self.resize(1024, 600)
+
         self.file_path = file_path
         self.stacked_widget = stacked_widget
         self.scanThread = scanThread
@@ -1336,6 +1405,7 @@ class DirectoryChecker(QObject):
 class MyApp(QApplication):
     def __init__(self):
         super().__init__(sys.argv)
+
         self.stacked_widget = QStackedWidget()
 
         self.setting_window = SettingWindow(self.stacked_widget)

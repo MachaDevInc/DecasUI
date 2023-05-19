@@ -210,7 +210,6 @@ class workWindow(JobsMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
         self.stacked_widget = stacked_widget
-        self.setupUi(self)
 
         self.back.clicked.connect(self.go_back)
 

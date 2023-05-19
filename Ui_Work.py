@@ -24,7 +24,7 @@ class CustomWidget(QWidget):
         if button_needed:
             self.button = QPushButton()
             icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap("D:/Decas/Test/retry.png"),
+            icon.addPixmap(QtGui.QPixmap("pics/retry.png"),
                            QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.button.setIcon(icon)
             self.button.setIconSize(QSize(350, 50))  # Set the size of the icon
@@ -46,7 +46,7 @@ class JobsMainWindow(QMainWindow):
         super(JobsMainWindow, self).__init__(parent)
         self.setStyleSheet("""
             QMainWindow {
-                background-image: url(D:/Decas/Test/Standby.png);
+                background-image: url(pics/Standby.png);
                 background-repeat: no-repeat
             }
         """)
@@ -60,7 +60,7 @@ class JobsMainWindow(QMainWindow):
         self.label.setGeometry(QRect(0, 0, 1024, 600))
         self.label.setText("")
         self.label.setPixmap(QtGui.QPixmap(
-            "d:\\DecasUI\\DecasUI\\pics/Standby.png"))
+            "pics/Standby.png"))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
         self.label_2 = QLabel(self.centralwidget)
@@ -102,7 +102,7 @@ class JobsMainWindow(QMainWindow):
         self.back.setText("")
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(
-            "d:\\DecasUI\\DecasUI\\pics/1 (400 × 400 px).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            "pics/1 (400 × 400 px).png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.back.setIcon(icon)
         self.back.setIconSize(QSize(75, 75))
         self.back.setFlat(True)

@@ -246,17 +246,15 @@ class workWindow(JobsMainWindow):
 
         if jobs:
             for value in jobs.values():
-                # Add custom widgets to the scroll area content layout
-                for i in range(10):
-                    # Replace this with your actual data
-                    data = value["job_title"]
-                    if value["data_sent"] is True:
-                        widget = CustomWidget(
-                            f"", data, self.central_widget, False)
-                    else:
-                        widget = CustomWidget(
-                            f"", data, self.central_widget, True)
-                    self.scroll_layout.addWidget(widget)
+                # Replace this with your actual data
+                data = value["job_title"]
+                if value["data_sent"] is True:
+                    widget = CustomWidget(
+                        f"", data, self.central_widget, False)
+                else:
+                    widget = CustomWidget(
+                        f"", data, self.central_widget, True)
+                self.scroll_layout.addWidget(widget)
 
 
 class USBWindow(QMainWindow):

@@ -39,62 +39,73 @@ time.sleep(1)
 proc1.terminate()
 
 
-class VirtualKeyboard(tk.Tk):
-
-    def __init__(self, on_enter_callback):
-        super().__init__()
+class VirtualKeyboard(tk.Toplevel):
+    def __init__(self, master):
+        super().__init__(master)
 
         self.title("Virtual Keyboard")
-        self.configure(bg='black')
+        self.configure(bg='skyblue')
 
         self.input_var = tk.StringVar()
-        self.input_label = tk.Entry(
-            self, textvariable=self.input_var, width=80)
-        self.input_label.grid(row=0, column=0, columnspan=15)
+        self.input_label = tk.Entry(self, textvariable=self.input_var, width=50, font=('Helvetica', '20'))
+        self.input_label.pack()
 
         self.keys = [
-            ['`', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9', '0', '-', '=', 'Backspace'],
-            ['Tab', 'q', 'w', 'e', 'r', 't', 'y',
-                'u', 'i', 'o', 'p', '[', ']', '\\'],
-            ['Caps Lock', 'a', 's', 'd', 'f', 'g', 'h',
-                'j', 'k', 'l', ';', '\'', 'Enter'],
-            ['Shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 'Shift'],
-            ['Ctrl', 'Alt', ' ', 'Alt', 'Ctrl']
+            ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
+            ['Tab', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\'],
+            ['Caps Lock', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', 'Enter'],
+            ['Shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', ':', '.', '/', 'Shift'],
+            [                   'Ctrl', 'Alt', ' ', 'Alt', 'Ctrl']
         ]
 
         self.shift_mappings = {
-            '`': '~', '1': '!', '2': '@', '3': '#', '4': '$', '5': '%', '6': '^', '7': '&', '8': '*', '9': '(',
-            '0': ')',
+            '`': '~', '1': '!', '2': '@', '3': '#', '4': '$', '5': '%', '6': '^', '7': '&', '8': '*', '9': '(', '0': ')',
             '-': '_', '=': '+', '[': '{', ']': '}', '\\': '|', ';': ':', '\'': '"', ',': '<', '.': '>', '/': '?'
         }
 
         self.caps_lock_on = False
         self.shift_on = False
-        self.create_keyboard()
 
-        self.on_enter_callback = on_enter_callback
+        self.buttons = []  # to keep track of all the buttons
+        self.create_keyboard()
 
     def create_keyboard(self):
         for row_index, row in enumerate(self.keys, start=1):
+            frame = tk.Frame(self)
+            frame.pack(side='top', fill='x', padx=5, pady=5)
+            button_row = []
             for col_index, key in enumerate(row):
-                button = tk.Button(
-                    self, text=key, width=5, height=2, command=lambda k=key: self.press_key(k))
-                button.grid(row=row_index, column=col_index, padx=2, pady=2)
+                if key in ('Backspace', 'Tab'):
+                    width = 16
+                elif key in ('Enter','Shift', 'Caps Lock'):
+                    width = 14
+                elif key in (' ',):
+                    width = 52
+                else:
+                    width = 5
 
+                button = tk.Button(frame, text=key, width=width, height=2, command=lambda k=key: self.press_key(k))
+                button.pack(side='left', padx=2, pady=2)
+                button_row.append(button)
+            self.buttons.append(button_row)
+        if row_index == len(self.keys):
+            frame.pack(side='top', fill='x', padx=100, pady=5)
+        else:
+            frame.pack(side='top', fill='x', padx=5, pady=5)
+
+        self.buttons.append(button_row)
     def press_key(self, key):
         if key == 'Backspace':
             self.input_var.set(self.input_var.get()[:-1])
         elif key == 'Enter':
-            entered_text = self.input_var.get()
-            print(f"Input: {entered_text}")
+            print(f"Input: {self.input_var.get()}")
             self.input_var.set('')
-            self.destroy()
-            self.on_enter_callback(entered_text)
         elif key == 'Caps Lock':
             self.caps_lock_on = not self.caps_lock_on
+            self.update_keys()
         elif key == 'Shift':
             self.shift_on = not self.shift_on
+            self.update_keys()
             return
         elif key not in ('Ctrl', 'Alt', 'Tab'):
             if self.shift_on:
@@ -103,7 +114,16 @@ class VirtualKeyboard(tk.Tk):
 
             char = key.upper() if self.caps_lock_on and key.isalpha() else key
             self.input_var.set(self.input_var.get() + char)
-    pass
+            self.update_keys()
+
+    def update_keys(self):
+        for row_keys, row_buttons in zip(self.keys, self.buttons):
+            for key, button in zip(row_keys, row_buttons):
+                if key.isalpha():
+                    if self.caps_lock_on or self.shift_on:
+                        button.config(text=key.upper())
+                    else:
+                        button.config(text=key.lower())
 
 
 class SharedData(QObject):

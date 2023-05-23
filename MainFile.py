@@ -288,11 +288,14 @@ class workWindow(JobsMainWindow):
                 data = value["job_title"]
                 if value["data_sent"] is True:
                     widget = CustomWidget(
-                        key, data, self.central_widget, False)
+                        key, data, self.central_widget, False, self)
                 else:
                     widget = CustomWidget(
-                        key, data, self.central_widget, True)
+                        key, data, self.central_widget, True, self)
                 self.scroll_layout.addWidget(widget)
+
+    def on_button_clicked(self, text):
+        print(f"Button for '{text}' clicked")
 
 
 class USBWindow(QMainWindow):

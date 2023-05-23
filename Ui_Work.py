@@ -1,16 +1,18 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QMenuBar, QStatusBar, QPushButton, QMainWindow, QScrollArea
-from PyQt5.QtCore import QSize, QRect, QMetaObject, QCoreApplication, Qt
+from PyQt5.QtCore import QSize, QRect, QCoreApplication, Qt
 from PyQt5 import QtGui
 
 
 class CustomWidget(QWidget):
-    def __init__(self, job_id, data, central_widget, button_needed=False, parent=None):
+    def __init__(self, job_id, data, central_widget, button_needed=False, work_window=None, parent=None):
         super(CustomWidget, self).__init__(parent)
         self.central_widget = central_widget
         # Set CustomWidget background to be transparent
         # white background with alpha = 100
         self.job_id = job_id
         self.setStyleSheet("background-color: rgba(255, 255, 255, 100);")
+
+        self.work_window = work_window  # Store a reference to the workWindow
 
         # set layout
         self.layout = QHBoxLayout()
@@ -38,7 +40,9 @@ class CustomWidget(QWidget):
             # Set the fixed size of the button to match the icon size
             self.button.setFixedSize(QSize(80, 40))
             self.button.setFlat(True)
-            self.button.clicked.connect(lambda checked, text=self.job_id: self.on_button_clicked(text))
+            if self.work_window is not None:
+                self.button.clicked.connect(
+                    lambda: self.work_window.on_button_clicked(self.job_id))
 
             # Create a QHBoxLayout for the button
             button_layout = QHBoxLayout()
@@ -48,9 +52,6 @@ class CustomWidget(QWidget):
 
             # Add the button layout to the main layout
             self.layout.addLayout(button_layout)
-
-    def on_button_clicked(self, text):
-        print(f"Button for '{text}' clicked")
 
 
 class JobsMainWindow(QMainWindow):

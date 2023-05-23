@@ -78,7 +78,8 @@ class VirtualKeyboard(tk.Tk):
 
     def create_keyboard(self):
         for row_index, row in enumerate(self.keys, start=1):
-            frame = tk.Frame(self, bg='skyblue')  # Set the background color same as the parent
+            # Set the background color same as the parent
+            frame = tk.Frame(self, bg='skyblue')
             button_row = []
             for col_index, key in enumerate(row):
                 if key in ('Backspace', 'Tab'):
@@ -228,7 +229,7 @@ class SettingWindow(QMainWindow):
         self.work_window = workWindow(self.stacked_widget)
         self.work_window.showFullScreen()
         self.hide()
-        
+
     def open_virtual_keyboard(self, text_edit):
         virtual_keyboard = VirtualKeyboard(
             lambda entered_text: self.update_text_edit(text_edit, entered_text))
@@ -268,6 +269,8 @@ class workWindow(JobsMainWindow):
         self.hide()
 
     def show_jobs(self):
+        self.clear_layout(self.scroll_layout)
+        
         jobs = {}
 
         try:
@@ -294,8 +297,30 @@ class workWindow(JobsMainWindow):
                         key, data, self.central_widget, True, self)
                 self.scroll_layout.addWidget(widget)
 
+    def clear_layout(self, layout):
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
     def on_button_clicked(self, text):
         print(f"Button for '{text}' clicked")
+        self.processingThread = ProcessingThread(
+            "", "", True, text)
+        self.processingThread.finished_signal.connect(
+            self.onProcessingFinished)
+        self.processingThread.start()
+
+    def onProcessingFinished(self, retrieval_code, data_sent):
+        self.code = retrieval_code
+        self.data_sent = data_sent
+        if self.data_sent:
+            pass
+        print("Processing finished!")
+        print(retrieval_code)
+
+        # Refresh the screen by showing the jobs again
+        self.show_jobs()
 
 
 class USBWindow(QMainWindow):
@@ -783,11 +808,12 @@ class ProcessingThread(QThread):
     # Signal emitted when thread finishes
     finished_signal = pyqtSignal(str, bool)
 
-    def __init__(self, file_path, userID, retry=False):
+    def __init__(self, file_path, userID, retry=False, retry_text=""):
         super().__init__()
         self.file_path = file_path
         self.userID = userID
         self.retry = retry
+        self.retry_text = retry_text
         self.data_sent = False
         self.job_title = ""
         self.receiver = ""
@@ -804,59 +830,103 @@ class ProcessingThread(QThread):
     def run(self):
         self.deviceID = self.get_mac_address()
         # self.deviceID = "10000000f7bbda73"
-        self.retrieval_code = ""
-        result = self.pdf_to_text_ocr()
-        print(result)
-        address = re.findall(
-            r'^(.*(?:Street|Avenue|Road|Lane).*\d{4}?.*)$', result, re.MULTILINE)
-        if address:
-            address = address[0]
+        if (self.retry is not True):
+            self.retrieval_code = ""
+            result = self.pdf_to_text_ocr()
+            print(result)
+            address = re.findall(
+                r'^(.*(?:Street|Avenue|Road|Lane).*\d{4}?.*)$', result, re.MULTILINE)
+            if address:
+                address = address[0]
+            else:
+                address = " "
+            print(address)
+
+            keywords = ["item", "Quantity", "qty", "items"]
+            keywords_info = ["Tax No", "Phone", "Email", "Invoice No", "Date"]
+
+            receipt_info = self.find_table(result, keywords_info)
+            info = self.extract_info(receipt_info)
+            print(f"Tax Number: {info['Tax Number']}")
+            print(f"Phone Number: {info['Phone Number']}")
+            print(f"Email: {info['Email']}")
+            print(f"Invoice Number: {info['Invoice Number']}")
+            print(f"Date: {info['Date']}")
+            print("\n\n")
+
+            receipt_text = self.find_table(result, keywords)
+            print(receipt_text)
+            print("\n\n")
+
+            receipt_text = receipt_text.replace('_', '0')
+            receipt_text = receipt_text.replace('-', '0')
+            receipt_text = receipt_text.replace('---', '0')
+            items = self.extract_items(receipt_text)
+            api_data = self.items_to_api_format(items)
+            print(api_data)
+            print("\n\n")
+
+            print(self.userID)
+            print("\n\n")
+
+            print(self.deviceID)
+            print("\n\n")
+
+            self.job_title = info['Invoice Number'] + \
+                "\n" + info['Email'] + "\n" + receipt_text
+
+            # (data, receiver, company_name, company_address, company_phone, date, device_id, receipt_number)
+            get_response = self.send_api_data(api_data, self.userID, "N2R Technologies3", address,
+                                              info['Phone Number'], info['Date'], self.deviceID, info['Invoice Number'])
+            self.decode_response(get_response)
+
+            self.update_jobs_dict()
+
+            # Emit signal when processing is done
+            self.finished_signal.emit(self.retrieval_code, self.data_sent)
         else:
-            address = " "
-        print(address)
+            try:
+                # Read the file
+                with open('my_jobs.json', 'r') as f:
+                    jobs = json.load(f)  # This will give you a dictionary
+                    # Get the size of the dictionary
+                    size = len(jobs)
+                    print(f"The dictionary contains {size} key-value pairs.")
+                    print(f"Dictionary: '{jobs[self.retry_text]}'")
 
-        keywords = ["item", "Quantity", "qty", "items"]
-        keywords_info = ["Tax No", "Phone", "Email", "Invoice No", "Date"]
+                    payload = jobs[self.retry_text]["payload"]
 
-        receipt_info = self.find_table(result, keywords_info)
-        info = self.extract_info(receipt_info)
-        print(f"Tax Number: {info['Tax Number']}")
-        print(f"Phone Number: {info['Phone Number']}")
-        print(f"Email: {info['Email']}")
-        print(f"Invoice Number: {info['Invoice Number']}")
-        print(f"Date: {info['Date']}")
-        print("\n\n")
+                    files = [
+                    ]
+                    headers = {}
 
-        receipt_text = self.find_table(result, keywords)
-        print(receipt_text)
-        print("\n\n")
+                    response = requests.request(
+                        "POST", self.url, headers=headers, data=payload, files=files)
 
-        receipt_text = receipt_text.replace('_', '0')
-        receipt_text = receipt_text.replace('-', '0')
-        receipt_text = receipt_text.replace('---', '0')
-        items = self.extract_items(receipt_text)
-        api_data = self.items_to_api_format(items)
-        print(api_data)
-        print("\n\n")
+                    self.decode_response(response.text)
 
-        print(self.userID)
-        print("\n\n")
+                    # self.data_sent
+                    self.job_title = jobs[self.retry_text]["job_title"]
+                    self.receiver = jobs[self.retry_text]["receiver"]
+                    self.company_name = jobs[self.retry_text]["company_name"]
+                    self.company_address = jobs[self.retry_text]["company_address"]
+                    self.company_phone = jobs[self.retry_text]["company_phone"]
+                    self.date = jobs[self.retry_text]["date"]
+                    self.receipt_number = jobs[self.retry_text]["receipt_number"]
+                    self.payload = payload
+                    self.response = response.text
+                    # self.response_code
 
-        print(self.deviceID)
-        print("\n\n")
+                    self.update_jobs_dict()
 
-        self.job_title = info['Invoice Number'] + \
-            "\n" + info['Email'] + "\n" + receipt_text
+                    # Emit signal when processing is done
+                    self.finished_signal.emit(
+                        "", self.data_sent)
 
-        # (data, receiver, company_name, company_address, company_phone, date, device_id, receipt_number)
-        get_response = self.send_api_data(api_data, self.userID, "N2R Technologies3", address,
-                                          info['Phone Number'], info['Date'], self.deviceID, info['Invoice Number'])
-        self.decode_response(get_response)
-
-        self.update_jobs_dict()
-
-        # Emit signal when processing is done
-        self.finished_signal.emit(self.retrieval_code, self.data_sent)
+            except json.JSONDecodeError:
+                print("File is not valid JSON")
+            except FileNotFoundError:
+                print("File 'my_jobs.json' not found.")
 
     def get_mac_address(self):
         mac_num = hex(uuid.getnode()).replace('0x', '').upper()
@@ -1094,27 +1164,30 @@ class ProcessingThread(QThread):
             print(f"Last key: {last_key}, last value: {last_value}")
             i = int(last_key)
 
-        if (self.retry is not True):
-            i += 1
+        if (self.retry is True):
+            # Removing an item using del
+            del jobs[self.retry_text]
 
-            if i != 0:
-                jobs[i] = {}
-                jobs[i]["data_sent"] = self.data_sent
-                jobs[i]["job_title"] = self.job_title
-                jobs[i]["receiver"] = self.receiver
-                jobs[i]["company_name"] = self.company_name
-                jobs[i]["company_address"] = self.company_address
-                jobs[i]["company_phone"] = self.company_phone
-                jobs[i]["date"] = self.date
-                jobs[i]["receipt_number"] = self.receipt_number
-                jobs[i]["payload"] = self.payload
-                jobs[i]["response"] = self.response
-                jobs[i]["response_code"] = self.response_code
+        i += 1
 
-            # print(jobs)
-            # Write the updated dictionary back to the file
-            with open('my_jobs.json', 'w') as f:
-                json.dump(jobs, f)
+        if i != 0:
+            jobs[i] = {}
+            jobs[i]["data_sent"] = self.data_sent
+            jobs[i]["job_title"] = self.job_title
+            jobs[i]["receiver"] = self.receiver
+            jobs[i]["company_name"] = self.company_name
+            jobs[i]["company_address"] = self.company_address
+            jobs[i]["company_phone"] = self.company_phone
+            jobs[i]["date"] = self.date
+            jobs[i]["receipt_number"] = self.receipt_number
+            jobs[i]["payload"] = self.payload
+            jobs[i]["response"] = self.response
+            jobs[i]["response_code"] = self.response_code
+
+        # print(jobs)
+        # Write the updated dictionary back to the file
+        with open('my_jobs.json', 'w') as f:
+            json.dump(jobs, f)
 
 
 class SettingsWindow1(QMainWindow):

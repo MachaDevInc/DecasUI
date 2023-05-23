@@ -269,7 +269,6 @@ class workWindow(JobsMainWindow):
 
     def show_jobs(self):
         jobs = {}
-        i = 0
 
         try:
             # Read the file
@@ -284,15 +283,15 @@ class workWindow(JobsMainWindow):
             print("File 'my_jobs.json' not found.")
 
         if jobs:
-            for value in jobs.values():
+            for key, value in jobs.items():
                 # Replace this with your actual data
                 data = value["job_title"]
                 if value["data_sent"] is True:
                     widget = CustomWidget(
-                        f"", data, self.central_widget, False)
+                        key, data, self.central_widget, False)
                 else:
                     widget = CustomWidget(
-                        f"", data, self.central_widget, True)
+                        key, data, self.central_widget, True)
                 self.scroll_layout.addWidget(widget)
 
 

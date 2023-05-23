@@ -4,11 +4,12 @@ from PyQt5 import QtGui
 
 
 class CustomWidget(QWidget):
-    def __init__(self, text, data, central_widget, button_needed=False, parent=None):
+    def __init__(self, job_id, data, central_widget, button_needed=False, parent=None):
         super(CustomWidget, self).__init__(parent)
         self.central_widget = central_widget
         # Set CustomWidget background to be transparent
         # white background with alpha = 100
+        self.job_id = job_id
         self.setStyleSheet("background-color: rgba(255, 255, 255, 100);")
 
         # set layout
@@ -22,7 +23,7 @@ class CustomWidget(QWidget):
         font.setWeight(60)
         self.label = QLabel()
         self.label.setText(data)  # Set the dynamic data here
-        self.label.setFixedWidth(780)
+        self.label.setFixedWidth(810)
         self.layout.addWidget(self.label)
         self.label.setFont(font)
 
@@ -33,10 +34,11 @@ class CustomWidget(QWidget):
             icon.addPixmap(QtGui.QPixmap("pics/retry.png"),
                            QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.button.setIcon(icon)
-            self.button.setIconSize(QSize(100, 50))  # Set the size of the icon
+            self.button.setIconSize(QSize(80, 40))  # Set the size of the icon
             # Set the fixed size of the button to match the icon size
-            self.button.setFixedSize(QSize(100, 50))
+            self.button.setFixedSize(QSize(80, 40))
             self.button.setFlat(True)
+            self.button.clicked.connect(lambda checked, text=self.job_id: self.on_button_clicked(text))
 
             # Create a QHBoxLayout for the button
             button_layout = QHBoxLayout()
@@ -46,6 +48,9 @@ class CustomWidget(QWidget):
 
             # Add the button layout to the main layout
             self.layout.addLayout(button_layout)
+
+    def on_button_clicked(self, text):
+        print(f"Button for '{text}' clicked")
 
 
 class JobsMainWindow(QMainWindow):
@@ -77,7 +82,7 @@ class JobsMainWindow(QMainWindow):
 
         # Create a central widget
         self.central_widget = QWidget(self.centralwidget)
-        self.central_widget.setGeometry(QRect(30, 70, 964, 400))
+        self.central_widget.setGeometry(QRect(30, 70, 994, 400))
 
         # Create a QVBoxLayout
         self.layout = QVBoxLayout(self.central_widget)

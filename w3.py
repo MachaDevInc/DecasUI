@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'w3.ui'
+# Form implementation generated from reading ui file 'd:\DecasUI\DecasUI\w3.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -14,38 +14,38 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow3(object):
     def setupUi(self, MainWindow3):
         MainWindow3.setObjectName("MainWindow3")
-        MainWindow3.resize(1024, 600)
+        MainWindow3.resize(1024, 601)
         self.centralwidget = QtWidgets.QWidget(MainWindow3)
         self.centralwidget.setObjectName("centralwidget")
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
         self.label_2.setGeometry(QtCore.QRect(0, 0, 1024, 600))
         self.label_2.setText("")
-        self.label_2.setPixmap(QtGui.QPixmap("pics/Standby.png"))
+        self.label_2.setPixmap(QtGui.QPixmap("d:\\DecasUI\\DecasUI\\pics/Standby.png"))
         self.label_2.setScaledContents(True)
         self.label_2.setObjectName("label_2")
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(100, 50, 400, 200))
-        self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap("pics/1 (300 × 300 px).png"))
-        self.label.setScaledContents(True)
-        self.label.setObjectName("label")
+        self.RFID_Icon = QtWidgets.QLabel(self.centralwidget)
+        self.RFID_Icon.setGeometry(QtCore.QRect(100, 50, 400, 200))
+        self.RFID_Icon.setText("")
+        self.RFID_Icon.setPixmap(QtGui.QPixmap("d:\\DecasUI\\DecasUI\\pics/1 (300 × 300 px).png"))
+        self.RFID_Icon.setScaledContents(True)
+        self.RFID_Icon.setObjectName("RFID_Icon")
         self.label_3 = QtWidgets.QLabel(self.centralwidget)
-        self.label_3.setGeometry(QtCore.QRect(400, 300, 300, 50))
+        self.label_3.setGeometry(QtCore.QRect(310, 290, 431, 50))
         self.label_3.setObjectName("label_3")
-        self.label_4 = QtWidgets.QLabel(self.centralwidget)
-        self.label_4.setGeometry(QtCore.QRect(600, 60, 200, 200))
-        self.label_4.setText("")
-        self.label_4.setPixmap(QtGui.QPixmap("pics/1 (90 × 90 px) (8).png"))
-        self.label_4.setScaledContents(True)
-        self.label_4.setObjectName("label_4")
+        self.QR_Icon = QtWidgets.QLabel(self.centralwidget)
+        self.QR_Icon.setGeometry(QtCore.QRect(600, 60, 191, 181))
+        self.QR_Icon.setText("")
+        self.QR_Icon.setPixmap(QtGui.QPixmap("d:\\DecasUI\\DecasUI\\pics/QR.png"))
+        self.QR_Icon.setScaledContents(True)
+        self.QR_Icon.setObjectName("QR_Icon")
         self.label_5 = QtWidgets.QLabel(self.centralwidget)
         self.label_5.setGeometry(QtCore.QRect(500, 140, 50, 50))
         self.label_5.setObjectName("label_5")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(110, 480, 500, 50))
+        self.label_6.setGeometry(QtCore.QRect(110, 480, 401, 50))
         self.label_6.setObjectName("label_6")
         self.Retrieve = QtWidgets.QLabel(self.centralwidget)
-        self.Retrieve.setGeometry(QtCore.QRect(790, 480, 200, 50))
+        self.Retrieve.setGeometry(QtCore.QRect(790, 480, 200, 61))
         self.Retrieve.setFrameShape(QtWidgets.QFrame.Box)
         self.Retrieve.setFrameShadow(QtWidgets.QFrame.Raised)
         self.Retrieve.setLineWidth(4)
@@ -55,7 +55,7 @@ class Ui_MainWindow3(object):
         self.text.setGeometry(QtCore.QRect(110, 410, 400, 50))
         self.text.setObjectName("text")
         self.Retreive = QtWidgets.QPushButton(self.centralwidget)
-        self.Retreive.setGeometry(QtCore.QRect(790, 480, 200, 50))
+        self.Retreive.setGeometry(QtCore.QRect(790, 480, 200, 61))
         self.Retreive.setText("")
         self.Retreive.setIconSize(QtCore.QSize(200, 200))
         self.Retreive.setCheckable(False)
@@ -71,9 +71,12 @@ class Ui_MainWindow3(object):
         self.next1.setAutoDefault(False)
         self.next1.setFlat(True)
         self.next1.setObjectName("next1")
+        self.notification = QtWidgets.QLabel(self.centralwidget)
+        self.notification.setGeometry(QtCore.QRect(310, 340, 431, 50))
+        self.notification.setObjectName("notification")
         MainWindow3.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow3)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1024, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1024, 17))
         self.menubar.setObjectName("menubar")
         MainWindow3.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow3)
@@ -86,12 +89,16 @@ class Ui_MainWindow3(object):
     def retranslateUi(self, MainWindow3):
         _translate = QtCore.QCoreApplication.translate
         MainWindow3.setWindowTitle(_translate("MainWindow3", "MainWindow"))
-        self.label_3.setText(_translate("MainWindow3", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">SCAN QR HERE</span></p></body></html>"))
+        self.label_3.setText(_translate("MainWindow3", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">SCAN RFID or QR CODE</span></p></body></html>"))
         self.label_5.setText(_translate("MainWindow3", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">OR</span></p></body></html>"))
         self.label_6.setText(_translate("MainWindow3", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">ENTER MOBILE NUMBER</span></p></body></html>"))
         self.Retrieve.setText(_translate("MainWindow3", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600; color:#ff0000;\">Retreive</span></p></body></html>"))
         self.text.setHtml(_translate("MainWindow3", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:18pt; font-weight:600;\">Press me</span></p></body></html>"))
+"hr { height: 1px; border-width: 0; }\n"
+"li.unchecked::marker { content: \"\\2610\"; }\n"
+"li.checked::marker { content: \"\\2612\"; }\n"
+"</style></head><body style=\" font-family:\'Segoe UI\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'MS Shell Dlg 2\'; font-size:18pt; font-weight:600;\">Press me</span></p></body></html>"))
+        self.notification.setText(_translate("MainWindow3", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\"></span></p></body></html>"))

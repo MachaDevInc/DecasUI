@@ -12,6 +12,7 @@ import subprocess
 
 from Ui_Work import JobsMainWindow
 from Ui_Work import CustomWidget
+from w3 import Ui_MainWindow3
 
 import board
 import busio
@@ -1190,10 +1191,9 @@ class ProcessingThread(QThread):
             json.dump(jobs, f)
 
 
-class SettingsWindow1(QMainWindow):
+class SettingsWindow1(QMainWindow, Ui_MainWindow3):
     def __init__(self, stacked_widget, file_path):
         super().__init__()
-        loadUi('w3.ui', self)
 
         # Set the window size
         self.resize(1024, 600)

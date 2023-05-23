@@ -1,10 +1,11 @@
-from PyQt5.QtCore import QObject, pyqtSignal, QThread
+from PyQt5.QtCore import QObject, pyqtSignal, QThread, QMetaObject, Q_ARG, Qt, pyqtSlot
 from PyQt5 import QtCore
+from PyQt5.QtGui import QPixmap
 import sys
 import os
 import subprocess
 import tkinter as tk
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedWidget, QLabel
 from PyQt5.uic import loadUi
 import time
 from PyQt5.QtCore import QTimer, QTime, QDate
@@ -271,7 +272,7 @@ class workWindow(JobsMainWindow):
 
     def show_jobs(self):
         self.clear_layout(self.scroll_layout)
-        
+
         jobs = {}
 
         try:
@@ -743,14 +744,40 @@ class BluetoothDiscoveryThread(QThread):
 
 
 # Define similar classes for WifiWindow, RsWindow, and SetWindow
+class Blinker(QObject):
+    def __init__(self, label):
+        super().__init__()
+        self.label = label
+        self.timer = QTimer()
+        self.timer.timeout.connect(self._toggle_visibility)
+
+    @pyqtSlot(int, int)
+    def start_blinking(self, interval, duration):
+        self.timer.start(interval)
+        QTimer.singleShot(duration, self.stop_blinking)
+
+    @pyqtSlot()
+    def stop_blinking(self):
+        self.timer.stop()
+        self.label.show()  # ensure it's visible when stop
+
+    def _toggle_visibility(self):
+        if self.label.isVisible():
+            self.label.hide()
+        else:
+            self.label.show()
+
+
 class ScanThread(QThread):
     foundUserID = pyqtSignal(str)
 
-    def __init__(self, ser, pn532, start_stop_command_bytes):
+    def __init__(self, ser, pn532, start_stop_command_bytes, rfid_label, qr_label):
         super().__init__()
         self.ser = ser
         self.pn532 = pn532
         self.start_stop_command_bytes = start_stop_command_bytes
+        self.rfid_blinker = Blinker(rfid_label)
+        self.qr_blinker = Blinker(qr_label)
         self.scanned = False
         self._isRunning = True
 
@@ -769,12 +796,22 @@ class ScanThread(QThread):
                 if data != "31":
                     data = self.ser.readline().decode("utf-8").strip()
                     if data:
+                        QMetaObject.invokeMethod(self.qr_blinker, "start_blinking",
+                                                 Qt.QueuedConnection,
+                                                 Q_ARG(int, 300),
+                                                 Q_ARG(int, 3000))
+
                         self.foundUserID.emit(data)
                         self.scanned = True
                         self.ser.write(self.start_stop_command_bytes)
 
                     uid = self.pn532.read_passive_target(timeout=0.1)
                     if uid is not None:
+                        QMetaObject.invokeMethod(self.rfid_blinker, "start_blinking",
+                                                 Qt.QueuedConnection,
+                                                 Q_ARG(int, 300),
+                                                 Q_ARG(int, 3000))
+
                         uid_string = ''.join(
                             [hex(i)[2:].zfill(2) for i in uid])
                         self.foundUserID.emit(uid_string)
@@ -803,6 +840,11 @@ class ScanThread(QThread):
             except Exception as e:
                 print(f"Error closing serial port: {e}")
         self.wait()  # ensure the thread has fully stopped
+        # stop blinking when thread stops
+        QMetaObject.invokeMethod(
+            self.rfid_blinker, "stop_blinking", Qt.QueuedConnection)
+        QMetaObject.invokeMethod(
+            self.qr_blinker, "stop_blinking", Qt.QueuedConnection)
 
 
 class ProcessingThread(QThread):
@@ -1194,6 +1236,7 @@ class ProcessingThread(QThread):
 class SettingsWindow1(QMainWindow, Ui_MainWindow3):
     def __init__(self, stacked_widget, file_path):
         super().__init__()
+        self.setupUi(self)
 
         # Set the window size
         self.resize(1024, 600)
@@ -1222,7 +1265,7 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.ser.write(self.start_scan_command_bytes)
 
         self.scanThread = ScanThread(
-            self.ser, self.pn532, self.start_stop_command_bytes)
+            self.ser, self.pn532, self.start_stop_command_bytes, self.RFID_Icon, self.QR_Icon)
         self.scanThread.foundUserID.connect(self.processUserID)
         self.scanThread.start()
 

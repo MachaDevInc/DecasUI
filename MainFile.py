@@ -410,9 +410,16 @@ class aboutWindow(QMainWindow):
         self.hide()
 
     def get_mac_address(self):
-        mac_num = hex(uuid.getnode()).replace('0x', '').upper()
-        mac = '-'.join(mac_num[i: i + 2] for i in range(0, 11, 2))
-        return mac
+        # mac_num = hex(uuid.getnode()).replace('0x', '').upper()
+        # mac = '-'.join(mac_num[i: i + 2] for i in range(0, 11, 2))
+        # return mac
+        
+        with open('/proc/cpuinfo', 'r') as f:
+            for line in f:
+                if line[0:6] == 'Serial':
+                    return line.split(":")[1].strip()
+        return "Unknown"
+
 
     def get_local_ip_address(self, target):
         ip_address = ''
@@ -801,6 +808,7 @@ class ScanThread(QThread):
                                                  Q_ARG(int, 300),
                                                  Q_ARG(int, 3000))
 
+                        time.sleep(3)
                         self.foundUserID.emit(data)
                         self.scanned = True
                         self.ser.write(self.start_stop_command_bytes)
@@ -814,6 +822,7 @@ class ScanThread(QThread):
 
                         uid_string = ''.join(
                             [hex(i)[2:].zfill(2) for i in uid])
+                        time.sleep(3)
                         self.foundUserID.emit(uid_string)
                         self.scanned = True
                         self.ser.write(self.start_stop_command_bytes)
@@ -1286,10 +1295,22 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.code = retrieval_code
         self.data_sent = data_sent
         if self.data_sent:
-            # use the remove() function to delete the file
-            os.remove(self.file_path)
+            pass
+        # use the remove() function to delete the file
+        os.remove(self.file_path)
         print("Processing finished!")
         print(retrieval_code)
+        
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.go_home)
+        self.timer.start(500)
+        
+    def go_home(self):
+        self.timer.stop()
+        self.SettingWindow_window = SettingWindow(
+            self.stacked_widget)
+        self.stacked_widget.addWidget(self.SettingWindow_window)
+        self.stacked_widget.setCurrentWidget(self.SettingWindow_window)
 
     def open_keyboard(self):
         self.scanThread.stop()
@@ -1365,8 +1386,9 @@ class NumericKeyboard(QMainWindow):
         self.code = retrieval_code
         self.data_sent = data_sent
         if self.data_sent:
-            # use the remove() function to delete the file
-            os.remove(self.file_path)
+            pass
+        # use the remove() function to delete the file
+        os.remove(self.file_path)
         print("Processing finished!")
         print(retrieval_code)
 

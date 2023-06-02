@@ -311,20 +311,19 @@ class workWindow(JobsMainWindow):
             "", "", True, text)
         self.processingThread.finished_signal.connect(
             self.onProcessingFinished)
-        self.processingThread.progress_signal.connect(
-            self.onProgress)
         self.processingThread.start()
 
-    def onProgress(self, notification):
-        _translate = QtCore.QCoreApplication.translate
-        self.notification.setText(_translate("stacked_widget", "<html><head/><body><p align=\"center\"><span style=\" background-color: black; color: white; font-size:22pt; font-weight:600;\">" + notification + "</span></p></body></html>"))
-
-    def onProcessingFinished(self, retrieval_code, data_sent, error):
+    def onProcessingFinished(self, retrieval_code, data_sent):
         self.code = retrieval_code
         self.data_sent = data_sent
+        if self.data_sent:
+            pass
+        print("Processing finished!")
+        print(retrieval_code)
 
         # Refresh the screen by showing the jobs again
         self.show_jobs()
+
 
 class USBWindow(QMainWindow):
     def __init__(self, stacked_widget):
@@ -779,105 +778,90 @@ class Blinker(QObject):
 class ScanThread(QThread):
     foundUserID = pyqtSignal(str)
 
-    def __init__(self, ser, pn532, start_scan_command_bytes, stop_scan_command_bytes, rfid_label, qr_label):
+    def __init__(self, ser, pn532, start_stop_command_bytes, rfid_label, qr_label):
         super().__init__()
         self.ser = ser
         self.pn532 = pn532
-        self.start_scan_command_bytes = start_scan_command_bytes
-        self.stop_scan_command_bytes = stop_scan_command_bytes
+        self.start_stop_command_bytes = start_stop_command_bytes
         self.rfid_blinker = Blinker(rfid_label)
         self.qr_blinker = Blinker(qr_label)
         self.scanned = False
-        self._isScanning = True
-        self._isRunning = False
-
-        try:
-            if not self.ser.isOpen():
-                self.ser.open()
-        except Exception as e:
-            print(f"Failed to open serial port in __init__: {e}")
-
-    def blink_and_sleep(self, blinker):
-        QMetaObject.invokeMethod(blinker, "start_blinking",
-                                 Qt.QueuedConnection,
-                                 Q_ARG(int, 300),
-                                 Q_ARG(int, 3000))
-        time.sleep(3)
+        self._isRunning = True
 
     def run(self):
-        if self._isRunning:
-            return
-
-        self._isRunning = True
-        try:
+        while self._isRunning:
             if not self.ser.isOpen():
-                self.ser.open()
-        except Exception as e:
-            print(f"Failed to open serial port in __init__: {e}")
-        self.ser.write(self.start_scan_command_bytes)
-        
-        while self._isScanning:
+                try:
+                    self.ser.open()
+                except Exception as e:
+                    print(f"Failed to open serial port: {e}")
+                    break
+
             try:
-                data = self.ser.readline().decode("utf-8").strip()
-                print("\nSerial Data: " + data + "\n")
+                data_bytes = self.ser.readline()
+                data = data_bytes[-2:].decode("utf-8").strip()
                 if data != "31":
                     data = self.ser.readline().decode("utf-8").strip()
-                    print("\nSerial Data: " + data + "\n")
-                    if data and "31" not in data:
-                        print("\nSerial Data: " + data + "\n")
-                        self.blink_and_sleep(self.qr_blinker)
+                    if data:
+                        QMetaObject.invokeMethod(self.qr_blinker, "start_blinking",
+                                                 Qt.QueuedConnection,
+                                                 Q_ARG(int, 300),
+                                                 Q_ARG(int, 3000))
+
+                        time.sleep(3)
                         self.foundUserID.emit(data)
                         self.scanned = True
-                        self.ser.write(self.stop_scan_command_bytes)
+                        self.ser.write(self.start_stop_command_bytes)
 
                     uid = self.pn532.read_passive_target(timeout=0.1)
                     if uid is not None:
-                        self.blink_and_sleep(self.rfid_blinker)
-                        uid_string = ''.join([hex(i)[2:].zfill(2) for i in uid])
+                        QMetaObject.invokeMethod(self.rfid_blinker, "start_blinking",
+                                                 Qt.QueuedConnection,
+                                                 Q_ARG(int, 300),
+                                                 Q_ARG(int, 3000))
+
+                        uid_string = ''.join(
+                            [hex(i)[2:].zfill(2) for i in uid])
+                        time.sleep(3)
                         self.foundUserID.emit(uid_string)
                         self.scanned = True
-                        self.ser.write(self.stop_scan_command_bytes)
+                        self.ser.write(self.start_stop_command_bytes)
 
             except Exception as e:
-                print(f"Error reading from serial port in run: {e}")
+                print(f"Error reading from serial port: {e}")
 
             if self.scanned:
+                self.stop()
                 break
-
-        self.cleanup()
 
     def restart(self):
         self.stop()
-        self._isScanning = True
+        self._isRunning = True
         self.scanned = False
         self.start()
 
     def stop(self):
-        self._isScanning = False
-
-    def cleanup(self):
         self._isRunning = False
+        # Close the serial port
         if self.ser.isOpen():
             try:
-                self.ser.write(self.stop_scan_command_bytes)
-                time.sleep(0.1)
                 self.ser.close()
             except Exception as e:
-                print(f"Error closing serial port in cleanup: {e}")
-
-        QMetaObject.invokeMethod(self.rfid_blinker, "stop_blinking", Qt.QueuedConnection)
-        QMetaObject.invokeMethod(self.qr_blinker, "stop_blinking", Qt.QueuedConnection)
+                print(f"Error closing serial port: {e}")
+        self.wait()  # ensure the thread has fully stopped
+        # stop blinking when thread stops
+        QMetaObject.invokeMethod(
+            self.rfid_blinker, "stop_blinking", Qt.QueuedConnection)
+        QMetaObject.invokeMethod(
+            self.qr_blinker, "stop_blinking", Qt.QueuedConnection)
 
 
 class ProcessingThread(QThread):
     # Signal emitted when thread finishes
-    finished_signal = pyqtSignal(str, bool, str)
-    # Signal emitted for UI updates
-    progress_signal = pyqtSignal(str)
+    finished_signal = pyqtSignal(str, bool)
 
     def __init__(self, file_path, userID, retry=False, retry_text=""):
         super().__init__()
-        self._isRunning = False
         self.file_path = file_path
         self.userID = userID
         self.retry = retry
@@ -897,115 +881,107 @@ class ProcessingThread(QThread):
         # self.url = "http://filesharing.n2rtech.com/api/send-data?"
 
     def run(self):
-        if not self._isRunning:
-            self._isRunning = True
-            self.deviceID = self.get_mac_address()
-            
-            if (self.retry is not True):
-                self.progress_signal.emit("Please wait!  Processing receipt...")
-                
-                self.retrieval_code = ""
-                result = self.pdf_to_text_ocr()
-                print(result)
-                address = re.findall(
-                    r'^(.*(?:Street|Avenue|Road|Lane).*\d{4}?.*)$', result, re.MULTILINE)
-                if address:
-                    address = address[0]
-                else:
-                    address = " "
-                print(address)
-
-                keywords = ["item", "Quantity", "qty", "items"]
-                keywords_info = ["Tax No", "Phone", "Email", "Invoice No", "Date"]
-
-                receipt_info = self.find_table(result, keywords_info)
-                info = self.extract_info(receipt_info)
-                print(f"Tax Number: {info['Tax Number']}")
-                print(f"Phone Number: {info['Phone Number']}")
-                print(f"Email: {info['Email']}")
-                print(f"Invoice Number: {info['Invoice Number']}")
-                print(f"Date: {info['Date']}")
-                print("\n\n")
-
-                receipt_text = self.find_table(result, keywords)
-                print(receipt_text)
-                print("\n\n")
-
-                receipt_text = receipt_text.replace('_', '0')
-                receipt_text = receipt_text.replace('-', '0')
-                receipt_text = receipt_text.replace('---', '0')
-                items = self.extract_items(receipt_text)
-                api_data = self.items_to_api_format(items)
-                print(api_data)
-                print("\n\n")
-
-                print(self.userID)
-                print("\n\n")
-
-                print(self.deviceID)
-                print("\n\n")
-                
-                self.progress_signal.emit("Sending data to REPSLIPS server...")
-
-                # (data, receiver, company_name, company_address, company_phone, date, device_id, receipt_number)
-                get_response = self.send_api_data(api_data, self.userID, "N2R Technologies3", address,
-                                                info['Phone Number'], info['Date'], self.deviceID, info['Invoice Number'])
-                self.decode_response(get_response)
-
-                if (self.data_sent is True):
-                    self.job_title = "Receiver: " + self.userID + "\n" + "Invoice No. " + info['Invoice Number'] + "\n" + "Email: " + info['Email'] + "\n" + "Receipt Data: \n" + receipt_text
-                else:
-                    self.job_title = "Error: " + self.parsed_data['response'] + "\n\n" + "Receiver: " + self.userID + "\n" + "Invoice No. " + info['Invoice Number'] + "\n" + "Email: " + info['Email'] + "\n" + "Receipt Data: \n" + receipt_text
-
-                self.update_jobs_dict()
-
-                # Emit signal when processing is done
-                self.finished_signal.emit(self.retrieval_code, self.data_sent, self.response_message)
+        self.deviceID = self.get_mac_address()
+        # self.deviceID = "10000000f7bbda73"
+        if (self.retry is not True):
+            self.retrieval_code = ""
+            result = self.pdf_to_text_ocr()
+            print(result)
+            address = re.findall(
+                r'^(.*(?:Street|Avenue|Road|Lane).*\d{4}?.*)$', result, re.MULTILINE)
+            if address:
+                address = address[0]
             else:
-                try:
-                    # Read the file
-                    with open('my_jobs.json', 'r') as f:
-                        jobs = json.load(f)  # This will give you a dictionary
-                        # Get the size of the dictionary
-                        size = len(jobs)
-                        print(f"The dictionary contains {size} key-value pairs.")
-                        print(f"Dictionary: '{jobs[self.retry_text]}'")
+                address = " "
+            print(address)
 
-                        payload = jobs[self.retry_text]["payload"]
+            keywords = ["item", "Quantity", "qty", "items"]
+            keywords_info = ["Tax No", "Phone", "Email", "Invoice No", "Date"]
 
-                        files = [
-                        ]
-                        headers = {}
+            receipt_info = self.find_table(result, keywords_info)
+            info = self.extract_info(receipt_info)
+            print(f"Tax Number: {info['Tax Number']}")
+            print(f"Phone Number: {info['Phone Number']}")
+            print(f"Email: {info['Email']}")
+            print(f"Invoice Number: {info['Invoice Number']}")
+            print(f"Date: {info['Date']}")
+            print("\n\n")
 
-                        response = requests.request(
-                            "POST", self.url, headers=headers, data=payload, files=files)
+            receipt_text = self.find_table(result, keywords)
+            print(receipt_text)
+            print("\n\n")
 
-                        self.decode_response(response.text)
+            receipt_text = receipt_text.replace('_', '0')
+            receipt_text = receipt_text.replace('-', '0')
+            receipt_text = receipt_text.replace('---', '0')
+            items = self.extract_items(receipt_text)
+            api_data = self.items_to_api_format(items)
+            print(api_data)
+            print("\n\n")
 
-                        # self.data_sent
-                        self.job_title = jobs[self.retry_text]["job_title"]
-                        self.receiver = jobs[self.retry_text]["receiver"]
-                        self.company_name = jobs[self.retry_text]["company_name"]
-                        self.company_address = jobs[self.retry_text]["company_address"]
-                        self.company_phone = jobs[self.retry_text]["company_phone"]
-                        self.date = jobs[self.retry_text]["date"]
-                        self.receipt_number = jobs[self.retry_text]["receipt_number"]
-                        self.payload = payload
-                        self.response = response.text
-                        # self.response_code
+            print(self.userID)
+            print("\n\n")
 
-                        self.update_jobs_dict()
+            print(self.deviceID)
+            print("\n\n")
 
-                        # Emit signal when processing is done
-                        self.finished_signal.emit(
-                            "", self.data_sent, self.response_message)
+            # (data, receiver, company_name, company_address, company_phone, date, device_id, receipt_number)
+            get_response = self.send_api_data(api_data, self.userID, "N2R Technologies3", address,
+                                              info['Phone Number'], info['Date'], self.deviceID, info['Invoice Number'])
+            self.decode_response(get_response)
 
-                except json.JSONDecodeError:
-                    print("File is not valid JSON")
-                except FileNotFoundError:
-                    print("File 'my_jobs.json' not found.")
+            if (self.data_sent is True):
+                self.job_title = "Invoice No. " + info['Invoice Number'] + "\n" + "Email: " + info['Email'] + "\n" + "Receipt Data: \n" + receipt_text
+            else:
+                self.job_title = "Error: " + self.parsed_data['response'] + "\n\n" + "Invoice No. " + info['Invoice Number'] + "\n" + "Email: " + info['Email'] + "\n" + "Receipt Data: \n" + receipt_text
 
-            self._isRunning = False
+            self.update_jobs_dict()
+
+            # Emit signal when processing is done
+            self.finished_signal.emit(self.retrieval_code, self.data_sent)
+        else:
+            try:
+                # Read the file
+                with open('my_jobs.json', 'r') as f:
+                    jobs = json.load(f)  # This will give you a dictionary
+                    # Get the size of the dictionary
+                    size = len(jobs)
+                    print(f"The dictionary contains {size} key-value pairs.")
+                    print(f"Dictionary: '{jobs[self.retry_text]}'")
+
+                    payload = jobs[self.retry_text]["payload"]
+
+                    files = [
+                    ]
+                    headers = {}
+
+                    response = requests.request(
+                        "POST", self.url, headers=headers, data=payload, files=files)
+
+                    self.decode_response(response.text)
+
+                    # self.data_sent
+                    self.job_title = jobs[self.retry_text]["job_title"]
+                    self.receiver = jobs[self.retry_text]["receiver"]
+                    self.company_name = jobs[self.retry_text]["company_name"]
+                    self.company_address = jobs[self.retry_text]["company_address"]
+                    self.company_phone = jobs[self.retry_text]["company_phone"]
+                    self.date = jobs[self.retry_text]["date"]
+                    self.receipt_number = jobs[self.retry_text]["receipt_number"]
+                    self.payload = payload
+                    self.response = response.text
+                    # self.response_code
+
+                    self.update_jobs_dict()
+
+                    # Emit signal when processing is done
+                    self.finished_signal.emit(
+                        "", self.data_sent)
+
+            except json.JSONDecodeError:
+                print("File is not valid JSON")
+            except FileNotFoundError:
+                print("File 'my_jobs.json' not found.")
 
     def get_mac_address(self):
         # mac_num = hex(uuid.getnode()).replace('0x', '').upper()
@@ -1205,18 +1181,17 @@ class ProcessingThread(QThread):
         # Check if 'success' or 'error' key exists in the parsed data
         if 'success' in self.parsed_data:
             self.response_code = "success"
-            self.response_message = self.parsed_data['success']
             self.data_sent = True
             print("Data uploaded successfully to API.")
 
         elif 'error' in self.parsed_data:
             error = self.parsed_data['error']
             self.response_code = "error: " + str(error)
-            self.response_message = self.parsed_data['response']
+            response_message = self.parsed_data['response']
 
             # Print the error message
             print(f"Error: {error}")
-            print(f"Response: {self.response_message}")
+            print(f"Response: {response_message}")
 
         else:
             print("Unexpected response format.")
@@ -1295,36 +1270,26 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         start_scan_command = "7E 00 08 01 00 02 01 AB CD"
         self.start_scan_command_bytes = bytes.fromhex(
             start_scan_command.replace(" ", ""))
-        stop_scan_command = "7E 00 08 01 00 02 00 AB CD"
-        self.stop_scan_command_bytes = bytes.fromhex(
-            stop_scan_command.replace(" ", ""))
+        start_stop_command = "7E 00 08 01 00 02 00 AB CD"
+        self.start_stop_command_bytes = bytes.fromhex(
+            start_stop_command.replace(" ", ""))
 
         # PN532
         i2c = busio.I2C(board.SCL, board.SDA)
         self.pn532 = PN532_I2C(i2c, debug=False)
         self.pn532.SAM_configuration()
-        
+
         self.ser = serial.Serial(self.serial_port, self.baud_rate, timeout=0.5)
-        
+        self.ser.write(self.start_scan_command_bytes)
+
         self.scanThread = ScanThread(
-            self.ser, self.pn532, self.start_scan_command_bytes, self.stop_scan_command_bytes, self.RFID_Icon, self.QR_Icon)
+            self.ser, self.pn532, self.start_stop_command_bytes, self.RFID_Icon, self.QR_Icon)
         self.scanThread.foundUserID.connect(self.processUserID)
         self.scanThread.start()
-        
+
         self.numeric_keyboard = NumericKeyboard(
             self, self.stacked_widget, self, self.scanThread, self.file_path)
         self.stacked_widget.addWidget(self.numeric_keyboard)
-            
-    def update_user_id(self, user_id=""):
-        if user_id != "":
-            self.userID = user_id
-            self.processingThread = ProcessingThread(
-                self.file_path, self.userID)
-            self.processingThread.finished_signal.connect(
-                self.onProcessingFinished)
-            self.processingThread.progress_signal.connect(
-                self.onProgress)
-            self.processingThread.start()
 
     def processUserID(self, scanned_data):
         self.userID = scanned_data
@@ -1333,48 +1298,24 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
             self.file_path, self.userID)
         self.processingThread.finished_signal.connect(
             self.onProcessingFinished)
-        self.processingThread.progress_signal.connect(
-            self.onProgress)
         self.processingThread.start()
 
-    def onProgress(self, notification):
-        _translate = QtCore.QCoreApplication.translate
-        self.notification.setText(_translate("stacked_widget", "<html><head/><body><p align=\"center\"><span style=\" background-color: black; color: white; font-size:22pt; font-weight:600;\">" + notification + "</span></p></body></html>"))
-        if (notification == "Sending data to REPSLIPS server..."):
-            self.timer = QTimer()
-            self.timer.timeout.connect(self.go_home)
-            self.timer.start(2000)
-
-    def onProcessingFinished(self, retrieval_code, data_sent, error):
+    def onProcessingFinished(self, retrieval_code, data_sent):
         self.code = retrieval_code
         self.data_sent = data_sent
-        
+        if self.data_sent:
+            pass
         # use the remove() function to delete the file
         os.remove(self.file_path)
         print("Processing finished!")
         print(retrieval_code)
         
-        if self.data_sent:
-            self.DataSentWindow_window = DataSentWindow(
-                self.file_path, self.stacked_widget)
-            self.stacked_widget.addWidget(self.DataSentWindow_window)
-            self.stacked_widget.setCurrentWidget(self.DataSentWindow_window)
-        else:
-            _translate = QtCore.QCoreApplication.translate
-            self.notification.setText(_translate("stacked_widget", "<html><head/><body><p align=\"center\"><span style=\" background-color: black; color: white; font-size:22pt; font-weight:600;\">" + error + "</span></p></body></html>"))
-            time.sleep(3)
-            self.timer = QTimer()
-            self.timer.timeout.connect(self.go_home)
-            self.timer.start(5000)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.go_home)
+        self.timer.start(500)
         
     def go_home(self):
         self.timer.stop()
-        
-        while self.stacked_widget.count() > 0:
-            widget_to_remove = self.stacked_widget.widget(0)  # get the widget
-            self.stacked_widget.removeWidget(widget_to_remove)  # remove it from stacked_widget
-            widget_to_remove.setParent(None)  # optional: set its parent to None so it gets deleted
-    
         self.SettingWindow_window = SettingWindow(
             self.stacked_widget)
         self.stacked_widget.addWidget(self.SettingWindow_window)
@@ -1388,49 +1329,14 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
     def print_retrieval_code(self):
         self.scanThread.stop()
         self.ser = serial.Serial(self.serial_port, self.baud_rate, timeout=0.5)
-        self.ser.write(self.stop_scan_command_bytes)
-
-        self.userID = ""
-        self.processingThread = ProcessingThread(
-            self.file_path, self.userID)
-        self.processingThread.finished_signal.connect(
-            self.onProcessingFinished_Print)
-        self.processingThread.progress_signal.connect(
-            self.onProgress_Print)
-        self.processingThread.start()
-
-    def onProgress_Print(self, notification):
-        _translate = QtCore.QCoreApplication.translate
-        self.notification.setText(_translate("stacked_widget", "<html><head/><body><p align=\"center\"><span style=\" background-color: black; color: white; font-size:22pt; font-weight:600;\">" + notification + "</span></p></body></html>"))
-
-    def onProcessingFinished_Print(self, retrieval_code, data_sent, error):
-        self.code = retrieval_code
-        self.data_sent = data_sent
-        # use the remove() function to delete the file
-        os.remove(self.file_path)
-        
-        if self.data_sent:
-            print("Processing finished!")
-            print(self.code)
-        
-            self.PrintRetrievalCode_window = PrintRetrievalCode(
-                self.file_path, self.stacked_widget, self.code)
-            self.stacked_widget.addWidget(self.PrintRetrievalCode_window)
-            self.stacked_widget.setCurrentWidget(self.PrintRetrievalCode_window)
-        else:
-            while self.stacked_widget.count() > 0:
-                widget_to_remove = self.stacked_widget.widget(0)  # get the widget
-                self.stacked_widget.removeWidget(widget_to_remove)  # remove it from stacked_widget
-                widget_to_remove.setParent(None)  # optional: set its parent to None so it gets deleted
-        
-            self.SettingWindow_window = SettingWindow(
-                self.stacked_widget)
-            self.stacked_widget.addWidget(self.SettingWindow_window)
-            self.stacked_widget.setCurrentWidget(self.SettingWindow_window)
+        self.ser.write(self.start_stop_command_bytes)
+        self.PrintRetrievalCode_window = PrintRetrievalCode(
+            self.file_path, self.stacked_widget, self.scanThread)
+        self.stacked_widget.addWidget(self.PrintRetrievalCode_window)
+        self.stacked_widget.setCurrentWidget(self.PrintRetrievalCode_window)
 
 
 class NumericKeyboard(QMainWindow):
-    userID_signal = pyqtSignal(str)  # Define signal, payload is str (userID)
 
     def __init__(self, parent, stacked_widget, numeric_keyboard, scanThread, file_path):
         super(NumericKeyboard, self).__init__()
@@ -1476,13 +1382,26 @@ class NumericKeyboard(QMainWindow):
 
     def enter_pressed(self):
         if self.number_found:
-            self.userID = self.number
-            self.numeric_keyboard.update_user_id(self.userID)
+            self.userID = self.name
+            self.processingThread = ProcessingThread(
+                self.file_path, self.userID)
+            self.processingThread.finished_signal.connect(
+                self.onProcessingFinished)
+            self.processingThread.start()
+            self.DataSentWindow_window = DataSentWindow(
+                self.file_path, self.stacked_widget, self.scanThread)
+            self.stacked_widget.addWidget(self.DataSentWindow_window)
+            self.stacked_widget.setCurrentWidget(self.DataSentWindow_window)
 
-            # Switch back to the SettingsWindow1
-            index = self.parent.stacked_widget.indexOf(self.numeric_keyboard)
-            self.parent.stacked_widget.setCurrentIndex(index)
-            self.hide()
+    def onProcessingFinished(self, retrieval_code, data_sent):
+        self.code = retrieval_code
+        self.data_sent = data_sent
+        if self.data_sent:
+            pass
+        # use the remove() function to delete the file
+        os.remove(self.file_path)
+        print("Processing finished!")
+        print(retrieval_code)
 
     def show_output(self):
         self.number = self.textEdit.toPlainText()
@@ -1542,7 +1461,7 @@ class NumericKeyboard(QMainWindow):
 
 
 class DataSentWindow(QMainWindow):
-    def __init__(self, file_path, stacked_widget):
+    def __init__(self, file_path, stacked_widget, scanThread):
         super().__init__()
         loadUi('w6.ui', self)
 
@@ -1551,6 +1470,7 @@ class DataSentWindow(QMainWindow):
 
         self.file_path = file_path
         self.stacked_widget = stacked_widget
+        self.scanThread = scanThread
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.go_home)
@@ -1565,7 +1485,7 @@ class DataSentWindow(QMainWindow):
 
 
 class PrintRetrievalCode(QMainWindow):
-    def __init__(self, file_path, stacked_widget, code):
+    def __init__(self, file_path, stacked_widget, scanThread):
         super().__init__()
         loadUi('w5.ui', self)
 
@@ -1574,12 +1494,11 @@ class PrintRetrievalCode(QMainWindow):
 
         self.file_path = file_path
         self.stacked_widget = stacked_widget
-        self.code = code
         self.thermal_print()
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.go_home)
-        self.timer.start(5000)
+        self.timer.start(500)
 
     def thermal_print(self):
         p = Serial(devfile='/dev/ttySC1',

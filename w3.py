@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow3(object):
     def setupUi(self, MainWindow3):
         MainWindow3.setObjectName("MainWindow3")
-        MainWindow3.resize(1024, 601)
+        MainWindow3.resize(1024, 600)
         self.centralwidget = QtWidgets.QWidget(MainWindow3)
         self.centralwidget.setObjectName("centralwidget")
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
@@ -72,7 +72,7 @@ class Ui_MainWindow3(object):
         self.next1.setFlat(True)
         self.next1.setObjectName("next1")
         self.notification = QtWidgets.QLabel(self.centralwidget)
-        self.notification.setGeometry(QtCore.QRect(310, 340, 431, 50))
+        self.notification.setGeometry(QtCore.QRect(310, 140, 831, 50))
         self.notification.setObjectName("notification")
         MainWindow3.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow3)

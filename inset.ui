@@ -356,9 +356,9 @@
      <font>
       <family>MS Shell rgb(0, 0, 0)Dlg 2</family>
       <pointsize>22</pointsize>
-      <weight>9</weight>
+      <weight>75</weight>
       <italic>false</italic>
-      <bold>false</bold>
+      <bold>true</bold>
      </font>
     </property>
     <property name="mouseTracking">
@@ -368,7 +368,7 @@
      <bool>false</bool>
     </property>
     <property name="styleSheet">
-     <string notr="true">font: 75 22pt &quot;MS Shell rgb(0, 0, 0)Dlg 2&quot;;</string>
+     <string notr="true">font: 600 22pt &quot;MS Shell rgb(0, 0, 0)Dlg 2&quot;;</string>
     </property>
     <property name="inputMethodHints">
      <set>Qt::ImhNone</set>

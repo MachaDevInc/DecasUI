@@ -265,14 +265,14 @@ class SettingWindow(QMainWindow):
         self.timer.timeout.connect(self.directory_checker.check_directory)
         self.timer.start(500)
 
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_system_time)
-        self.timer.start(1000)
+    #     self.timer = QTimer(self)
+    #     self.timer.timeout.connect(self.update_system_time)
+    #     self.timer.start(1000)
 
-    def update_system_time(self):
-        current_time = shared_data.time
-        self.time.setPlainText(f" {current_time}")
-        self.date.setPlainText(f" {shared_data.date}")
+    # def update_system_time(self):
+    #     current_time = shared_data.time
+    #     self.time.setPlainText(f" {current_time}")
+    #     self.date.setPlainText(f" {shared_data.date}")
 
     def open_settings_window1(self):
         file_path = self.directory_checker.path_data

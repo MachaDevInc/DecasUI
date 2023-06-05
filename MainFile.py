@@ -5,7 +5,13 @@ import sys
 import os
 import subprocess
 import tkinter as tk
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QStackedWidget, QLabel
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QPushButton,
+    QStackedWidget,
+    QLabel,
+)
 from PyQt5.uic import loadUi
 import time
 from PyQt5.QtCore import QTimer, QTime, QDate
@@ -42,33 +48,77 @@ proc1.terminate()
 
 
 class VirtualKeyboard(tk.Tk):
-
     def __init__(self, on_enter_callback):
         super().__init__()
 
         self.title("Virtual Keyboard")
-        self.configure(bg='skyblue')
+        self.configure(bg="skyblue")
 
         self.input_var = tk.StringVar()
         self.input_label = tk.Entry(
-            self, textvariable=self.input_var, width=60, font=('Helvetica', '20'))
+            self, textvariable=self.input_var, width=60, font=("Helvetica", "20")
+        )
         self.input_label.pack(padx=5, pady=5)
 
         self.keys = [
-            ['`', '1', '2', '3', '4', '5', '6', '7',
-                '8', '9', '0', '-', '=', 'Backspace'],
-            ['Tab', 'q', 'w', 'e', 'r', 't', 'y',
-                'u', 'i', 'o', 'p', '[', ']', '\\'],
-            ['Caps Lock', 'a', 's', 'd', 'f', 'g', 'h',
-                'j', 'k', 'l', ';', '\'', 'Enter'],
-            ['Shift', 'z', 'x', 'c', 'v', 'b', 'n',
-                'm', ',', ':', '.', '/', 'Shift'],
-            ['Ctrl', 'Alt', ' ', 'Alt', 'Ctrl']
+            [
+                "`",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "0",
+                "-",
+                "=",
+                "Backspace",
+            ],
+            ["Tab", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]", "\\"],
+            [
+                "Caps Lock",
+                "a",
+                "s",
+                "d",
+                "f",
+                "g",
+                "h",
+                "j",
+                "k",
+                "l",
+                ";",
+                "'",
+                "Enter",
+            ],
+            ["Shift", "z", "x", "c", "v", "b", "n", "m", ",", ":", ".", "/", "Shift"],
+            ["Ctrl", "Alt", " ", "Alt", "Ctrl"],
         ]
 
         self.shift_mappings = {
-            '`': '~', '1': '!', '2': '@', '3': '#', '4': '$', '5': '%', '6': '^', '7': '&', '8': '*', '9': '(', '0': ')',
-            '-': '_', '=': '+', '[': '{', ']': '}', '\\': '|', ';': ':', '\'': '"', ',': '<', '.': '>', '/': '?'
+            "`": "~",
+            "1": "!",
+            "2": "@",
+            "3": "#",
+            "4": "$",
+            "5": "%",
+            "6": "^",
+            "7": "&",
+            "8": "*",
+            "9": "(",
+            "0": ")",
+            "-": "_",
+            "=": "+",
+            "[": "{",
+            "]": "}",
+            "\\": "|",
+            ";": ":",
+            "'": '"',
+            ",": "<",
+            ".": ">",
+            "/": "?",
         }
 
         self.caps_lock_on = False
@@ -81,49 +131,55 @@ class VirtualKeyboard(tk.Tk):
     def create_keyboard(self):
         for row_index, row in enumerate(self.keys, start=1):
             # Set the background color same as the parent
-            frame = tk.Frame(self, bg='skyblue')
+            frame = tk.Frame(self, bg="skyblue")
             button_row = []
             for col_index, key in enumerate(row):
-                if key in ('Backspace', 'Tab'):
+                if key in ("Backspace", "Tab"):
                     width = 16
-                elif key in ('Enter', 'Shift', 'Caps Lock'):
+                elif key in ("Enter", "Shift", "Caps Lock"):
                     width = 14
-                elif key in (' ',):
+                elif key in (" ",):
                     width = 80
                 else:
                     width = 3
 
-                button = tk.Button(frame, text=key, width=width,
-                                   height=2, command=lambda k=key: self.press_key(k))
-                button.grid(row=0, column=col_index, padx=1,
-                            pady=1)  # Use grid instead of pack
+                button = tk.Button(
+                    frame,
+                    text=key,
+                    width=width,
+                    height=2,
+                    command=lambda k=key: self.press_key(k),
+                )
+                button.grid(
+                    row=0, column=col_index, padx=1, pady=1
+                )  # Use grid instead of pack
                 button_row.append(button)
 
                 # Distribute extra space evenly among columns
                 frame.columnconfigure(col_index, weight=1)
 
             # fill both directions and expand within available space
-            frame.pack(side='top', fill='both', padx=1, pady=1, expand=True)
+            frame.pack(side="top", fill="both", padx=1, pady=1, expand=True)
             self.buttons.append(button_row)
         self.buttons.append(button_row)
 
     def press_key(self, key):
-        if key == 'Backspace':
+        if key == "Backspace":
             self.input_var.set(self.input_var.get()[:-1])
-        elif key == 'Enter':
+        elif key == "Enter":
             entered_text = self.input_var.get()
             print(f"Input: {entered_text}")
-            self.input_var.set('')
+            self.input_var.set("")
             self.destroy()
             self.on_enter_callback(entered_text)
-        elif key == 'Caps Lock':
+        elif key == "Caps Lock":
             self.caps_lock_on = not self.caps_lock_on
             self.update_keys()
-        elif key == 'Shift':
+        elif key == "Shift":
             self.shift_on = not self.shift_on
             self.update_keys()
             return
-        elif key not in ('Ctrl', 'Alt', 'Tab'):
+        elif key not in ("Ctrl", "Alt", "Tab"):
             if self.shift_on:
                 key = self.shift_mappings.get(key, key.upper())
                 self.shift_on = False
@@ -140,11 +196,11 @@ class VirtualKeyboard(tk.Tk):
                         button.config(text=key.upper())
                     else:
                         button.config(text=key.lower())
+
     pass
 
 
 class SharedData(QObject):
-
     def __init__(self):
         super().__init__()
         self._date = None
@@ -190,7 +246,7 @@ shared_data = SharedData()
 class SettingWindow(QMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
-        loadUi('Ready.ui', self)
+        loadUi("Ready.ui", self)
 
         # Set the window size
         self.resize(1024, 600)
@@ -202,16 +258,17 @@ class SettingWindow(QMainWindow):
 
         self.directory_checker = DirectoryChecker()
         self.directory_checker.open_settings_window1_signal.connect(
-            self.open_settings_window1)
+            self.open_settings_window1
+        )
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.directory_checker.check_directory)
         self.timer.start(500)
-        
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-        
+
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
@@ -219,8 +276,7 @@ class SettingWindow(QMainWindow):
 
     def open_settings_window1(self):
         file_path = self.directory_checker.path_data
-        self.SettingsWindow1_window = SettingsWindow1(
-            self.stacked_widget, file_path)
+        self.SettingsWindow1_window = SettingsWindow1(self.stacked_widget, file_path)
         self.stacked_widget.addWidget(self.SettingsWindow1_window)
         self.stacked_widget.setCurrentWidget(self.SettingsWindow1_window)
         self.timer.stop()
@@ -243,7 +299,8 @@ class SettingWindow(QMainWindow):
 
     def open_virtual_keyboard(self, text_edit):
         virtual_keyboard = VirtualKeyboard(
-            lambda entered_text: self.update_text_edit(text_edit, entered_text))
+            lambda entered_text: self.update_text_edit(text_edit, entered_text)
+        )
         virtual_keyboard.mainloop()
 
 
@@ -251,16 +308,16 @@ class connectionWindow(QMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
         self.stacked_widget = stacked_widget
-        loadUi('connection.ui', self)
+        loadUi("connection.ui", self)
 
         # Set the window size
         self.resize(1024, 600)
         self.back.clicked.connect(self.go_back)
-        
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-        
+
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
@@ -282,15 +339,6 @@ class workWindow(JobsMainWindow):
 
         self.show_jobs()
         self.back.clicked.connect(self.go_back)
-        
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_system_time)
-        self.timer.start(1000)
-        
-    def update_system_time(self):
-        current_time = shared_data.time
-        self.time.setPlainText(f" {current_time}")
-        self.date.setPlainText(f" {shared_data.date}")
 
     def go_back(self):
         self.setting_window = SettingWindow(self.stacked_widget)
@@ -304,7 +352,7 @@ class workWindow(JobsMainWindow):
 
         try:
             # Read the file
-            with open('my_jobs.json', 'r') as f:
+            with open("my_jobs.json", "r") as f:
                 jobs = json.load(f)  # This will give you a dictionary
                 # Get the size of the dictionary
                 size = len(jobs)
@@ -319,11 +367,9 @@ class workWindow(JobsMainWindow):
                 # Replace this with your actual data
                 data = value["job_title"]
                 if value["data_sent"] is True:
-                    widget = CustomWidget(
-                        key, data, self.central_widget, False, self)
+                    widget = CustomWidget(key, data, self.central_widget, False, self)
                 else:
-                    widget = CustomWidget(
-                        key, data, self.central_widget, True, self)
+                    widget = CustomWidget(key, data, self.central_widget, True, self)
                 self.scroll_layout.addWidget(widget)
 
     def clear_layout(self, layout):
@@ -334,17 +380,21 @@ class workWindow(JobsMainWindow):
 
     def on_button_clicked(self, text):
         print(f"Button for '{text}' clicked")
-        self.processingThread = ProcessingThread(
-            "", "", True, text)
-        self.processingThread.finished_signal.connect(
-            self.onProcessingFinished)
-        self.processingThread.progress_signal.connect(
-            self.onProgress)
+        self.processingThread = ProcessingThread("", "", True, text)
+        self.processingThread.finished_signal.connect(self.onProcessingFinished)
+        self.processingThread.progress_signal.connect(self.onProgress)
         self.processingThread.start()
 
     def onProgress(self, notification):
         _translate = QtCore.QCoreApplication.translate
-        self.notification.setText(_translate("stacked_widget", "<html><head/><body><p align=\"center\"><span style=\" background-color: black; color: white; font-size:22pt; font-weight:600;\">" + notification + "</span></p></body></html>"))
+        self.notification.setText(
+            _translate(
+                "stacked_widget",
+                '<html><head/><body><p align="center"><span style=" background-color: black; color: white; font-size:22pt; font-weight:600;">'
+                + notification
+                + "</span></p></body></html>",
+            )
+        )
 
     def onProcessingFinished(self, retrieval_code, data_sent, error):
         self.code = retrieval_code
@@ -353,10 +403,11 @@ class workWindow(JobsMainWindow):
         # Refresh the screen by showing the jobs again
         self.show_jobs()
 
+
 class USBWindow(QMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
-        loadUi('inset.ui', self)
+        loadUi("inset.ui", self)
 
         # Set the window size
         self.resize(1024, 600)
@@ -368,15 +419,6 @@ class USBWindow(QMainWindow):
         self.wifi.clicked.connect(self.open_wifi)
         self.about.clicked.connect(self.open_about)
         self.rs.clicked.connect(self.open_rs)
-        
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_system_time)
-        self.timer.start(1000)
-        
-    def update_system_time(self):
-        current_time = shared_data.time
-        self.time.setPlainText(f" {current_time}")
-        self.date.setPlainText(f" {shared_data.date}")
 
     # def open_wifi(self):
     #     # Show the existing wifi_window instance
@@ -420,23 +462,35 @@ class aboutWindow(QMainWindow):
         super().__init__()
         self.stacked_widget = stacked_widget
         self._translate = QtCore.QCoreApplication.translate
-        loadUi('About.ui', self)
+        loadUi("About.ui", self)
 
         # Set the window size
         self.resize(1024, 600)
 
-        self.mac.setText(self._translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" +
-                                         self.get_mac_address() + "</span></p></body></html>"))
-        self.ip.setText(self._translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" +
-                                        self.get_local_ip_address('8.8.8.8') + "</span></p></body></html>"))
+        self.mac.setText(
+            self._translate(
+                "MainWindow",
+                '<html><head/><body><p align="center"><span style=" font-size:22pt; font-weight:600;">'
+                + self.get_mac_address()
+                + "</span></p></body></html>",
+            )
+        )
+        self.ip.setText(
+            self._translate(
+                "MainWindow",
+                '<html><head/><body><p align="center"><span style=" font-size:22pt; font-weight:600;">'
+                + self.get_local_ip_address("8.8.8.8")
+                + "</span></p></body></html>",
+            )
+        )
         self.back.clicked.connect(self.go_back)
         # Google's DNS as target to get the local ip
-        print(self.get_local_ip_address('8.8.8.8'))
-        
+        print(self.get_local_ip_address("8.8.8.8"))
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-        
+
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
@@ -451,16 +505,15 @@ class aboutWindow(QMainWindow):
         # mac_num = hex(uuid.getnode()).replace('0x', '').upper()
         # mac = '-'.join(mac_num[i: i + 2] for i in range(0, 11, 2))
         # return mac
-        
-        with open('/proc/cpuinfo', 'r') as f:
+
+        with open("/proc/cpuinfo", "r") as f:
             for line in f:
-                if line[0:6] == 'Serial':
+                if line[0:6] == "Serial":
                     return line.split(":")[1].strip()
         return "Unknown"
 
-
     def get_local_ip_address(self, target):
-        ip_address = ''
+        ip_address = ""
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect((target, 1))
@@ -474,7 +527,7 @@ class aboutWindow(QMainWindow):
 class WifiWindow(QMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
-        loadUi('wifiset.ui', self)
+        loadUi("wifiset.ui", self)
 
         # Set the window size
         self.resize(1024, 600)
@@ -487,16 +540,20 @@ class WifiWindow(QMainWindow):
         self.back.clicked.connect(self.go_back)
 
         self.password.clicked.connect(
-            lambda: self.open_virtual_keyboard(self.textEdit1))
+            lambda: self.open_virtual_keyboard(self.textEdit1)
+        )
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
 
-        self.status.setText(self._translate(
-            "wifisetting", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
+        self.status.setText(
+            self._translate(
+                "wifisetting",
+                '<html><head/><body><p align="center"><span style=" font-size:22pt; font-weight:600;">Scanning...Please wait!</span></p></body></html>',
+            )
+        )
         self.discovery_thread = WiFiDiscoveryThread(self)
-        self.discovery_thread.device_discovered.connect(
-            self.add_wifi_item)
+        self.discovery_thread.device_discovered.connect(self.add_wifi_item)
         self.discovery_thread.start()
 
         self.network_ssid = self.ssid.itemText(0)
@@ -507,16 +564,25 @@ class WifiWindow(QMainWindow):
 
     def refresh_wifi_scan(self):
         self.ssid.clear()
-        self.status.setText(self._translate(
-            "wifisetting", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
+        self.status.setText(
+            self._translate(
+                "wifisetting",
+                '<html><head/><body><p align="center"><span style=" font-size:22pt; font-weight:600;">Scanning...Please wait!</span></p></body></html>',
+            )
+        )
         self.discovery_thread = WiFiDiscoveryThread(self)
-        self.discovery_thread.device_discovered.connect(
-            self.add_wifi_item)
+        self.discovery_thread.device_discovered.connect(self.add_wifi_item)
         self.discovery_thread.start()
 
     def add_wifi_item(self, name, devices):
-        self.status.setText(self._translate(
-            "wifisetting", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" + devices + " network(s) found</span></p></body></html>"))
+        self.status.setText(
+            self._translate(
+                "wifisetting",
+                '<html><head/><body><p align="center"><span style=" font-size:22pt; font-weight:600;">'
+                + devices
+                + " network(s) found</span></p></body></html>",
+            )
+        )
         self.ssid.addItem(name)
 
     def on_combobox_activated(self, text):
@@ -532,7 +598,7 @@ class WifiWindow(QMainWindow):
         self.network_password = str(self.textEdit1.toPlainText())
         print(self.network_password)
 
-        if (self.network_ssid != "" and self.network_password != ""):
+        if self.network_ssid != "" and self.network_password != "":
             self.connect_wifi(self.network_ssid, self.network_password)
 
     def get_current_network(self):
@@ -592,11 +658,12 @@ class WifiWindow(QMainWindow):
         # Check if the connection was successful
         time.sleep(10)  # Wait for the connection to establish
 
-        new_ssid = self.get_current_network().decode('utf-8').strip()
+        new_ssid = self.get_current_network().decode("utf-8").strip()
 
         if new_network_ssid != new_ssid:
             print(
-                "Failed to connect to the new network. Reverting to the previous network configuration.")
+                "Failed to connect to the new network. Reverting to the previous network configuration."
+            )
 
             # Revert to the previous network configuration
             with open("/etc/wpa_supplicant/wpa_supplicant.conf", "w") as wifi_config:
@@ -629,7 +696,8 @@ class WifiWindow(QMainWindow):
 
     def open_virtual_keyboard(self, text_edit):
         virtual_keyboard = VirtualKeyboard(
-            lambda entered_text: self.update_text_edit(text_edit, entered_text))
+            lambda entered_text: self.update_text_edit(text_edit, entered_text)
+        )
         virtual_keyboard.mainloop()
 
 
@@ -637,25 +705,24 @@ class RSWindow(QMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
         self.stacked_widget = stacked_widget
-        loadUi('RSset.ui', self)
+        loadUi("RSset.ui", self)
 
         # Set the window size
         self.resize(1024, 600)
 
         self.back.clicked.connect(self.go_back)
-        self.address.clicked.connect(
-            lambda: self.open_virtual_keyboard(self.textEdit))
+        self.address.clicked.connect(lambda: self.open_virtual_keyboard(self.textEdit))
         self.baudrate.addItems(["9600", "19200", "38400", "115200"])
         self.parity.addItems(["None", "Even", "Odd"])
         # Connect the combo box's activated signal to a slot function
         self.baudrate.activated[str].connect(self.on_combobox_activated)
 
         self.parity.activated[str].connect(self.on_combobox_activated1)
-        
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-        
+
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
@@ -677,7 +744,8 @@ class RSWindow(QMainWindow):
 
     def open_virtual_keyboard(self, text_edit):
         virtual_keyboard = VirtualKeyboard(
-            lambda entered_text: self.update_text_edit(text_edit, entered_text))
+            lambda entered_text: self.update_text_edit(text_edit, entered_text)
+        )
         virtual_keyboard.mainloop()
 
 
@@ -685,7 +753,7 @@ class usbWindow(QMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
         self.stacked_widget = stacked_widget
-        loadUi('usbset.ui', self)
+        loadUi("usbset.ui", self)
 
         # Set the window size
         self.resize(1024, 600)
@@ -695,11 +763,11 @@ class usbWindow(QMainWindow):
 
         # Connect the combo box's activated signal to a slot function
         self.comport.activated[str].connect(self.on_combobox_activated)
-        
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-        
+
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
@@ -726,27 +794,30 @@ class bluetoothWindow(QMainWindow):
         super().__init__()
         self.stacked_widget = stacked_widget
         self._translate = QtCore.QCoreApplication.translate
-        loadUi('bluetooth.ui', self)
+        loadUi("bluetooth.ui", self)
 
         # Set the window size
         self.resize(1024, 600)
 
-        self.status.setText(self._translate(
-            "bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
+        self.status.setText(
+            self._translate(
+                "bluetooth",
+                '<html><head/><body><p align="center"><span style=" font-size:22pt; font-weight:600;">Scanning...Please wait!</span></p></body></html>',
+            )
+        )
         self.discovery_thread = BluetoothDiscoveryThread(self)
-        self.discovery_thread.device_discovered.connect(
-            self.add_bluetooth_item)
+        self.discovery_thread.device_discovered.connect(self.add_bluetooth_item)
         self.discovery_thread.start()
 
         self.refresh.clicked.connect(self.refresh_bluetooth_scan)
         self.back.clicked.connect(self.go_back)
         # Connect the combo box's activated signal to a slot function
         self.bluetooth1.activated[str].connect(self.on_combobox_activated)
-        
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-        
+
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
@@ -754,16 +825,25 @@ class bluetoothWindow(QMainWindow):
 
     def refresh_bluetooth_scan(self):
         self.bluetooth1.clear()
-        self.status.setText(self._translate(
-            "bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">Scanning...Please wait!</span></p></body></html>"))
+        self.status.setText(
+            self._translate(
+                "bluetooth",
+                '<html><head/><body><p align="center"><span style=" font-size:22pt; font-weight:600;">Scanning...Please wait!</span></p></body></html>',
+            )
+        )
         self.discovery_thread = BluetoothDiscoveryThread(self)
-        self.discovery_thread.device_discovered.connect(
-            self.add_bluetooth_item)
+        self.discovery_thread.device_discovered.connect(self.add_bluetooth_item)
         self.discovery_thread.start()
 
     def add_bluetooth_item(self, name, devices):
-        self.status.setText(self._translate(
-            "bluetooth", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">" + devices + " devices found</span></p></body></html>"))
+        self.status.setText(
+            self._translate(
+                "bluetooth",
+                '<html><head/><body><p align="center"><span style=" font-size:22pt; font-weight:600;">'
+                + devices
+                + " devices found</span></p></body></html>",
+            )
+        )
         self.bluetooth1.addItem(name)
 
     def on_combobox_activated(self, text):
@@ -843,7 +923,15 @@ class Blinker(QObject):
 class ScanThread(QThread):
     foundUserID = pyqtSignal(str)
 
-    def __init__(self, ser, pn532, start_scan_command_bytes, stop_scan_command_bytes, rfid_label, qr_label):
+    def __init__(
+        self,
+        ser,
+        pn532,
+        start_scan_command_bytes,
+        stop_scan_command_bytes,
+        rfid_label,
+        qr_label,
+    ):
         super().__init__()
         self.ser = ser
         self.pn532 = pn532
@@ -862,10 +950,13 @@ class ScanThread(QThread):
             print(f"Failed to open serial port in __init__: {e}")
 
     def blink_and_sleep(self, blinker):
-        QMetaObject.invokeMethod(blinker, "start_blinking",
-                                 Qt.QueuedConnection,
-                                 Q_ARG(int, 300),
-                                 Q_ARG(int, 3000))
+        QMetaObject.invokeMethod(
+            blinker,
+            "start_blinking",
+            Qt.QueuedConnection,
+            Q_ARG(int, 300),
+            Q_ARG(int, 3000),
+        )
         time.sleep(3)
 
     def run(self):
@@ -879,7 +970,7 @@ class ScanThread(QThread):
         except Exception as e:
             print(f"Failed to open serial port in __init__: {e}")
         self.ser.write(self.start_scan_command_bytes)
-        
+
         while self._isScanning:
             try:
                 data = self.ser.readline().decode("utf-8").strip()
@@ -897,7 +988,7 @@ class ScanThread(QThread):
                     uid = self.pn532.read_passive_target(timeout=0.1)
                     if uid is not None:
                         self.blink_and_sleep(self.rfid_blinker)
-                        uid_string = ''.join([hex(i)[2:].zfill(2) for i in uid])
+                        uid_string = "".join([hex(i)[2:].zfill(2) for i in uid])
                         self.foundUserID.emit(uid_string)
                         self.scanned = True
                         self.ser.write(self.stop_scan_command_bytes)
@@ -929,7 +1020,9 @@ class ScanThread(QThread):
             except Exception as e:
                 print(f"Error closing serial port in cleanup: {e}")
 
-        QMetaObject.invokeMethod(self.rfid_blinker, "stop_blinking", Qt.QueuedConnection)
+        QMetaObject.invokeMethod(
+            self.rfid_blinker, "stop_blinking", Qt.QueuedConnection
+        )
         QMetaObject.invokeMethod(self.qr_blinker, "stop_blinking", Qt.QueuedConnection)
 
 
@@ -964,15 +1057,16 @@ class ProcessingThread(QThread):
         if not self._isRunning:
             self._isRunning = True
             self.deviceID = self.get_mac_address()
-            
-            if (self.retry is not True):
+
+            if self.retry is not True:
                 self.progress_signal.emit("Please wait!  Processing receipt...")
-                
+
                 self.retrieval_code = ""
                 result = self.pdf_to_text_ocr()
                 print(result)
                 address = re.findall(
-                    r'^(.*(?:Street|Avenue|Road|Lane).*\d{4}?.*)$', result, re.MULTILINE)
+                    r"^(.*(?:Street|Avenue|Road|Lane).*\d{4}?.*)$", result, re.MULTILINE
+                )
                 if address:
                     address = address[0]
                 else:
@@ -995,9 +1089,9 @@ class ProcessingThread(QThread):
                 print(receipt_text)
                 print("\n\n")
 
-                receipt_text = receipt_text.replace('_', '0')
-                receipt_text = receipt_text.replace('-', '0')
-                receipt_text = receipt_text.replace('---', '0')
+                receipt_text = receipt_text.replace("_", "0")
+                receipt_text = receipt_text.replace("-", "0")
+                receipt_text = receipt_text.replace("---", "0")
                 items = self.extract_items(receipt_text)
                 api_data = self.items_to_api_format(items)
                 print(api_data)
@@ -1008,27 +1102,64 @@ class ProcessingThread(QThread):
 
                 print(self.deviceID)
                 print("\n\n")
-                
+
                 self.progress_signal.emit("Sending data to REPSLIPS server...")
 
                 # (data, receiver, company_name, company_address, company_phone, date, device_id, receipt_number)
-                get_response = self.send_api_data(api_data, self.userID, "N2R Technologies3", address,
-                                                info['Phone Number'], info['Date'], self.deviceID, info['Invoice Number'])
+                get_response = self.send_api_data(
+                    api_data,
+                    self.userID,
+                    "N2R Technologies3",
+                    address,
+                    info["Phone Number"],
+                    info["Date"],
+                    self.deviceID,
+                    info["Invoice Number"],
+                )
                 self.decode_response(get_response)
 
-                if (self.data_sent is True):
-                    self.job_title = "Receiver: " + self.userID + "\n" + "Invoice No. " + info['Invoice Number'] + "\n" + "Email: " + info['Email'] + "\n" + "Receipt Data: \n" + receipt_text
+                if self.data_sent is True:
+                    self.job_title = (
+                        "Receiver: "
+                        + self.userID
+                        + "\n"
+                        + "Invoice No. "
+                        + info["Invoice Number"]
+                        + "\n"
+                        + "Email: "
+                        + info["Email"]
+                        + "\n"
+                        + "Receipt Data: \n"
+                        + receipt_text
+                    )
                 else:
-                    self.job_title = "Error: " + self.parsed_data['response'] + "\n\n" + "Receiver: " + self.userID + "\n" + "Invoice No. " + info['Invoice Number'] + "\n" + "Email: " + info['Email'] + "\n" + "Receipt Data: \n" + receipt_text
+                    self.job_title = (
+                        "Error: "
+                        + self.parsed_data["response"]
+                        + "\n\n"
+                        + "Receiver: "
+                        + self.userID
+                        + "\n"
+                        + "Invoice No. "
+                        + info["Invoice Number"]
+                        + "\n"
+                        + "Email: "
+                        + info["Email"]
+                        + "\n"
+                        + "Receipt Data: \n"
+                        + receipt_text
+                    )
 
                 self.update_jobs_dict()
 
                 # Emit signal when processing is done
-                self.finished_signal.emit(self.retrieval_code, self.data_sent, self.response_message)
+                self.finished_signal.emit(
+                    self.retrieval_code, self.data_sent, self.response_message
+                )
             else:
                 try:
                     # Read the file
-                    with open('my_jobs.json', 'r') as f:
+                    with open("my_jobs.json", "r") as f:
                         jobs = json.load(f)  # This will give you a dictionary
                         # Get the size of the dictionary
                         size = len(jobs)
@@ -1037,12 +1168,12 @@ class ProcessingThread(QThread):
 
                         payload = jobs[self.retry_text]["payload"]
 
-                        files = [
-                        ]
+                        files = []
                         headers = {}
 
                         response = requests.request(
-                            "POST", self.url, headers=headers, data=payload, files=files)
+                            "POST", self.url, headers=headers, data=payload, files=files
+                        )
 
                         self.decode_response(response.text)
 
@@ -1062,7 +1193,8 @@ class ProcessingThread(QThread):
 
                         # Emit signal when processing is done
                         self.finished_signal.emit(
-                            "", self.data_sent, self.response_message)
+                            "", self.data_sent, self.response_message
+                        )
 
                 except json.JSONDecodeError:
                     print("File is not valid JSON")
@@ -1075,22 +1207,21 @@ class ProcessingThread(QThread):
         # mac_num = hex(uuid.getnode()).replace('0x', '').upper()
         # mac = '-'.join(mac_num[i: i + 2] for i in range(0, 11, 2))
         # return mac
-        
-        with open('/proc/cpuinfo', 'r') as f:
+
+        with open("/proc/cpuinfo", "r") as f:
             for line in f:
-                if line[0:6] == 'Serial':
+                if line[0:6] == "Serial":
                     return line.split(":")[1].strip()
         return "Unknown"
 
     def find_table(self, text, keywords, min_columns=4):
-        lines = text.split('\n')
+        lines = text.split("\n")
         table_data = []
         header_found = False
         headers = []
 
         # Compile the regular expressions for case-insensitive keyword matching
-        keyword_patterns = [re.compile(
-            re.escape(kw), re.IGNORECASE) for kw in keywords]
+        keyword_patterns = [re.compile(re.escape(kw), re.IGNORECASE) for kw in keywords]
 
         for line in lines:
             # Check if any of the keywords are present in the current line
@@ -1112,7 +1243,7 @@ class ProcessingThread(QThread):
         # Reformat the table data
         formatted_table_data = []
         for data in table_data:
-            formatted_data = ' '.join(data.split())
+            formatted_data = " ".join(data.split())
             formatted_table_data.append(formatted_data)
 
         # Join the headers and table data into a single string
@@ -1144,11 +1275,11 @@ class ProcessingThread(QThread):
         return result
 
     def extract_items(self, text):
-        lines = text.split('\n')
+        lines = text.split("\n")
         items = []
         for line in lines:
             # Updated regex pattern to match item, quantity, unit price, tax, discount, and total
-            pattern = r'\d+\s+([\w\s]+)\s+(\d+)\s+([\d\.]+)\s+([_\d\.%]+)\s+([_\d\.%]+)\s+([\d\.]+)'
+            pattern = r"\d+\s+([\w\s]+)\s+(\d+)\s+([\d\.]+)\s+([_\d\.%]+)\s+([_\d\.%]+)\s+([\d\.]+)"
             match = re.search(pattern, line)
             if match:
                 item = match.group(1).strip()
@@ -1157,14 +1288,16 @@ class ProcessingThread(QThread):
                 tax = match.group(4)
                 discount = match.group(5)
                 total = float(match.group(6))
-                items.append({
-                    'item': item,
-                    'quantity': quantity,
-                    'unit_price': unit_price,
-                    'tax': tax,
-                    'discount': discount,
-                    'total': total
-                })
+                items.append(
+                    {
+                        "item": item,
+                        "quantity": quantity,
+                        "unit_price": unit_price,
+                        "tax": tax,
+                        "discount": discount,
+                        "total": total,
+                    }
+                )
         return items
 
     def extract_info(self, text_info):
@@ -1181,76 +1314,93 @@ class ProcessingThread(QThread):
         # search for each pattern and add to dictionary
         tax_search = re.search(tax_pattern, text_info)
         if tax_search:
-            info['Tax Number'] = tax_search.group(1)
+            info["Tax Number"] = tax_search.group(1)
 
         phone_search = re.search(phone_pattern, text_info)
         if phone_search:
-            info['Phone Number'] = phone_search.group(1)
+            info["Phone Number"] = phone_search.group(1)
 
         email_search = re.search(email_pattern, text_info)
         if email_search:
-            info['Email'] = email_search.group(1)
+            info["Email"] = email_search.group(1)
 
         invoice_search = re.search(invoice_pattern, text_info)
         if invoice_search:
-            info['Invoice Number'] = invoice_search.group(1)
+            info["Invoice Number"] = invoice_search.group(1)
 
             # Extract only numbers from the text
-            info['Invoice Number'] = "".join(
-                filter(str.isdigit, info['Invoice Number']))
+            info["Invoice Number"] = "".join(
+                filter(str.isdigit, info["Invoice Number"])
+            )
 
             # If the length of the numbers string is more than 9 characters
-            if len(info['Invoice Number']) > 9:
+            if len(info["Invoice Number"]) > 9:
                 # Trim the numbers string to the first 9 characters
-                info['Invoice Number'] = info['Invoice Number'][:9]
+                info["Invoice Number"] = info["Invoice Number"][:9]
 
         match = re.search(date_pattern, str(text_info))
         if match:
-            if '/' in match.group():
-                info['Date'] = (datetime.strptime(
-                    match.group(), "%d/%m/%Y").date()).isoformat()
-            elif '-' in match.group():
-                info['Date'] = (datetime.strptime(
-                    match.group(), "%d-%m-%Y").date()).isoformat()
-            elif ',' in match.group() and ' ' not in match.group():
-                info['Date'] = (datetime.strptime(
-                    match.group(), "%d,%b,%Y").date()).isoformat()
-            elif ',' in match.group() and ' ' in match.group():
-                info['Date'] = (datetime.strptime(
-                    match.group(), "%d %b, %Y").date()).isoformat()
-            elif ' ' in match.group() and ',' not in match.group():
-                info['Date'] = (datetime.strptime(
-                    match.group(), "%d %b %Y").date()).isoformat()
+            if "/" in match.group():
+                info["Date"] = (
+                    datetime.strptime(match.group(), "%d/%m/%Y").date()
+                ).isoformat()
+            elif "-" in match.group():
+                info["Date"] = (
+                    datetime.strptime(match.group(), "%d-%m-%Y").date()
+                ).isoformat()
+            elif "," in match.group() and " " not in match.group():
+                info["Date"] = (
+                    datetime.strptime(match.group(), "%d,%b,%Y").date()
+                ).isoformat()
+            elif "," in match.group() and " " in match.group():
+                info["Date"] = (
+                    datetime.strptime(match.group(), "%d %b, %Y").date()
+                ).isoformat()
+            elif " " in match.group() and "," not in match.group():
+                info["Date"] = (
+                    datetime.strptime(match.group(), "%d %b %Y").date()
+                ).isoformat()
 
         return info
 
     def items_to_api_format(self, items):
         api_data = {}
         for i, item in enumerate(items):
-            api_data[f'products[{i}][product]'] = item['item']
-            api_data[f'products[{i}][quantity]'] = str(item['quantity'])
-            api_data[f'products[{i}][price]'] = str(item['unit_price'])
-            api_data[f'products[{i}][tax]'] = item['tax']
-            api_data[f'products[{i}][total]'] = str(item['total'])
+            api_data[f"products[{i}][product]"] = item["item"]
+            api_data[f"products[{i}][quantity]"] = str(item["quantity"])
+            api_data[f"products[{i}][price]"] = str(item["unit_price"])
+            api_data[f"products[{i}][tax]"] = item["tax"]
+            api_data[f"products[{i}][total]"] = str(item["total"])
         return api_data
 
-    def send_api_data(self, data, receiver, company_name, company_address, company_phone, date, device_id, receipt_number):
-        payload = {'receiver': receiver,
-                   'company_name': company_name,
-                   'company_address': company_address,
-                   'company_phone': company_phone,
-                   'date': date,
-                   'device_id': device_id,
-                   'receipt_number': receipt_number}
+    def send_api_data(
+        self,
+        data,
+        receiver,
+        company_name,
+        company_address,
+        company_phone,
+        date,
+        device_id,
+        receipt_number,
+    ):
+        payload = {
+            "receiver": receiver,
+            "company_name": company_name,
+            "company_address": company_address,
+            "company_phone": company_phone,
+            "date": date,
+            "device_id": device_id,
+            "receipt_number": receipt_number,
+        }
 
         payload.update(data)
-        files = [
-
-        ]
+        files = []
         headers = {}
 
         response = requests.request(
-            "POST", self.url, headers=headers, data=payload, files=files)
+            "POST", self.url, headers=headers, data=payload, files=files
+        )
 
         self.receiver = receiver
         self.company_name = company_name
@@ -1267,16 +1417,16 @@ class ProcessingThread(QThread):
         self.parsed_data = json.loads(response_text)
 
         # Check if 'success' or 'error' key exists in the parsed data
-        if 'success' in self.parsed_data:
+        if "success" in self.parsed_data:
             self.response_code = "success"
-            self.response_message = self.parsed_data['success']
+            self.response_message = self.parsed_data["success"]
             self.data_sent = True
             print("Data uploaded successfully to API.")
 
-        elif 'error' in self.parsed_data:
-            error = self.parsed_data['error']
+        elif "error" in self.parsed_data:
+            error = self.parsed_data["error"]
             self.response_code = "error: " + str(error)
-            self.response_message = self.parsed_data['response']
+            self.response_message = self.parsed_data["response"]
 
             # Print the error message
             print(f"Error: {error}")
@@ -1285,8 +1435,8 @@ class ProcessingThread(QThread):
         else:
             print("Unexpected response format.")
 
-        if 'CODE' in self.parsed_data:
-            code = self.parsed_data['CODE']
+        if "CODE" in self.parsed_data:
+            code = self.parsed_data["CODE"]
 
             # Print the extracted values
             print(f"CODE: {code}")
@@ -1298,7 +1448,7 @@ class ProcessingThread(QThread):
 
         try:
             # Read the file
-            with open('my_jobs.json', 'r') as f:
+            with open("my_jobs.json", "r") as f:
                 jobs = json.load(f)  # This will give you a dictionary
                 # Get the size of the dictionary
                 size = len(jobs)
@@ -1314,7 +1464,7 @@ class ProcessingThread(QThread):
             print(f"Last key: {last_key}, last value: {last_value}")
             i = int(last_key)
 
-        if (self.retry is True):
+        if self.retry is True:
             # Removing an item using del
             del jobs[self.retry_text]
 
@@ -1336,7 +1486,7 @@ class ProcessingThread(QThread):
 
         # print(jobs)
         # Write the updated dictionary back to the file
-        with open('my_jobs.json', 'w') as f:
+        with open("my_jobs.json", "w") as f:
             json.dump(jobs, f)
 
 
@@ -1358,62 +1508,70 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.baud_rate = 9600
         start_scan_command = "7E 00 08 01 00 02 01 AB CD"
         self.start_scan_command_bytes = bytes.fromhex(
-            start_scan_command.replace(" ", ""))
+            start_scan_command.replace(" ", "")
+        )
         stop_scan_command = "7E 00 08 01 00 02 00 AB CD"
-        self.stop_scan_command_bytes = bytes.fromhex(
-            stop_scan_command.replace(" ", ""))
+        self.stop_scan_command_bytes = bytes.fromhex(stop_scan_command.replace(" ", ""))
 
         # PN532
         i2c = busio.I2C(board.SCL, board.SDA)
         self.pn532 = PN532_I2C(i2c, debug=False)
         self.pn532.SAM_configuration()
-        
+
         self.ser = serial.Serial(self.serial_port, self.baud_rate, timeout=0.5)
-        
+
         self.scanThread = ScanThread(
-            self.ser, self.pn532, self.start_scan_command_bytes, self.stop_scan_command_bytes, self.RFID_Icon, self.QR_Icon)
+            self.ser,
+            self.pn532,
+            self.start_scan_command_bytes,
+            self.stop_scan_command_bytes,
+            self.RFID_Icon,
+            self.QR_Icon,
+        )
         self.scanThread.foundUserID.connect(self.processUserID)
         self.scanThread.start()
-        
+
         self.numeric_keyboard = NumericKeyboard(
-            self, self.stacked_widget, self, self.scanThread, self.file_path)
+            self, self.stacked_widget, self, self.scanThread, self.file_path
+        )
         self.stacked_widget.addWidget(self.numeric_keyboard)
-        
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-        
+
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
         self.date.setPlainText(f" {shared_data.date}")
-            
+
     def update_user_id(self, user_id=""):
         if user_id != "":
             self.userID = user_id
-            self.processingThread = ProcessingThread(
-                self.file_path, self.userID)
-            self.processingThread.finished_signal.connect(
-                self.onProcessingFinished)
-            self.processingThread.progress_signal.connect(
-                self.onProgress)
+            self.processingThread = ProcessingThread(self.file_path, self.userID)
+            self.processingThread.finished_signal.connect(self.onProcessingFinished)
+            self.processingThread.progress_signal.connect(self.onProgress)
             self.processingThread.start()
 
     def processUserID(self, scanned_data):
         self.userID = scanned_data
         print("Found a User ID:", scanned_data)
-        self.processingThread = ProcessingThread(
-            self.file_path, self.userID)
-        self.processingThread.finished_signal.connect(
-            self.onProcessingFinished)
-        self.processingThread.progress_signal.connect(
-            self.onProgress)
+        self.processingThread = ProcessingThread(self.file_path, self.userID)
+        self.processingThread.finished_signal.connect(self.onProcessingFinished)
+        self.processingThread.progress_signal.connect(self.onProgress)
         self.processingThread.start()
 
     def onProgress(self, notification):
         _translate = QtCore.QCoreApplication.translate
-        self.notification.setText(_translate("stacked_widget", "<html><head/><body><p align=\"center\"><span style=\" background-color: black; color: white; font-size:22pt; font-weight:600;\">" + notification + "</span></p></body></html>"))
-        if (notification == "Sending data to REPSLIPS server..."):
+        self.notification.setText(
+            _translate(
+                "stacked_widget",
+                '<html><head/><body><p align="center"><span style=" background-color: black; color: white; font-size:22pt; font-weight:600;">'
+                + notification
+                + "</span></p></body></html>",
+            )
+        )
+        if notification == "Sending data to REPSLIPS server...":
             self.timer = QTimer()
             self.timer.timeout.connect(self.go_home)
             self.timer.start(2000)
@@ -1421,35 +1579,46 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
     def onProcessingFinished(self, retrieval_code, data_sent, error):
         self.code = retrieval_code
         self.data_sent = data_sent
-        
+
         # use the remove() function to delete the file
         os.remove(self.file_path)
         print("Processing finished!")
         print(retrieval_code)
-        
+
         if self.data_sent:
             self.DataSentWindow_window = DataSentWindow(
-                self.file_path, self.stacked_widget)
+                self.file_path, self.stacked_widget
+            )
             self.stacked_widget.addWidget(self.DataSentWindow_window)
             self.stacked_widget.setCurrentWidget(self.DataSentWindow_window)
         else:
             _translate = QtCore.QCoreApplication.translate
-            self.notification.setText(_translate("stacked_widget", "<html><head/><body><p align=\"center\"><span style=\" background-color: black; color: white; font-size:22pt; font-weight:600;\">" + error + "</span></p></body></html>"))
+            self.notification.setText(
+                _translate(
+                    "stacked_widget",
+                    '<html><head/><body><p align="center"><span style=" background-color: black; color: white; font-size:22pt; font-weight:600;">'
+                    + error
+                    + "</span></p></body></html>",
+                )
+            )
             time.sleep(3)
             self.timer = QTimer()
             self.timer.timeout.connect(self.go_home)
             self.timer.start(5000)
-        
+
     def go_home(self):
         self.timer.stop()
-        
+
         while self.stacked_widget.count() > 0:
             widget_to_remove = self.stacked_widget.widget(0)  # get the widget
-            self.stacked_widget.removeWidget(widget_to_remove)  # remove it from stacked_widget
-            widget_to_remove.setParent(None)  # optional: set its parent to None so it gets deleted
-    
-        self.SettingWindow_window = SettingWindow(
-            self.stacked_widget)
+            self.stacked_widget.removeWidget(
+                widget_to_remove
+            )  # remove it from stacked_widget
+            widget_to_remove.setParent(
+                None
+            )  # optional: set its parent to None so it gets deleted
+
+        self.SettingWindow_window = SettingWindow(self.stacked_widget)
         self.stacked_widget.addWidget(self.SettingWindow_window)
         self.stacked_widget.setCurrentWidget(self.SettingWindow_window)
 
@@ -1464,40 +1633,48 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.ser.write(self.stop_scan_command_bytes)
 
         self.userID = ""
-        self.processingThread = ProcessingThread(
-            self.file_path, self.userID)
-        self.processingThread.finished_signal.connect(
-            self.onProcessingFinished_Print)
-        self.processingThread.progress_signal.connect(
-            self.onProgress_Print)
+        self.processingThread = ProcessingThread(self.file_path, self.userID)
+        self.processingThread.finished_signal.connect(self.onProcessingFinished_Print)
+        self.processingThread.progress_signal.connect(self.onProgress_Print)
         self.processingThread.start()
 
     def onProgress_Print(self, notification):
         _translate = QtCore.QCoreApplication.translate
-        self.notification.setText(_translate("stacked_widget", "<html><head/><body><p align=\"center\"><span style=\" background-color: black; color: white; font-size:22pt; font-weight:600;\">" + notification + "</span></p></body></html>"))
+        self.notification.setText(
+            _translate(
+                "stacked_widget",
+                '<html><head/><body><p align="center"><span style=" background-color: black; color: white; font-size:22pt; font-weight:600;">'
+                + notification
+                + "</span></p></body></html>",
+            )
+        )
 
     def onProcessingFinished_Print(self, retrieval_code, data_sent, error):
         self.code = retrieval_code
         self.data_sent = data_sent
         # use the remove() function to delete the file
         os.remove(self.file_path)
-        
+
         if self.data_sent:
             print("Processing finished!")
             print(self.code)
-        
+
             self.PrintRetrievalCode_window = PrintRetrievalCode(
-                self.file_path, self.stacked_widget, self.code)
+                self.file_path, self.stacked_widget, self.code
+            )
             self.stacked_widget.addWidget(self.PrintRetrievalCode_window)
             self.stacked_widget.setCurrentWidget(self.PrintRetrievalCode_window)
         else:
             while self.stacked_widget.count() > 0:
                 widget_to_remove = self.stacked_widget.widget(0)  # get the widget
-                self.stacked_widget.removeWidget(widget_to_remove)  # remove it from stacked_widget
-                widget_to_remove.setParent(None)  # optional: set its parent to None so it gets deleted
-        
-            self.SettingWindow_window = SettingWindow(
-                self.stacked_widget)
+                self.stacked_widget.removeWidget(
+                    widget_to_remove
+                )  # remove it from stacked_widget
+                widget_to_remove.setParent(
+                    None
+                )  # optional: set its parent to None so it gets deleted
+
+            self.SettingWindow_window = SettingWindow(self.stacked_widget)
             self.stacked_widget.addWidget(self.SettingWindow_window)
             self.stacked_widget.setCurrentWidget(self.SettingWindow_window)
 
@@ -1507,7 +1684,7 @@ class NumericKeyboard(QMainWindow):
 
     def __init__(self, parent, stacked_widget, numeric_keyboard, scanThread, file_path):
         super(NumericKeyboard, self).__init__()
-        loadUi('W4.ui', self)
+        loadUi("W4.ui", self)
 
         # Set the window size
         self.resize(1024, 600)
@@ -1521,26 +1698,26 @@ class NumericKeyboard(QMainWindow):
         self.saved_value = ""
         self.name = ""
         # Connect buttons to their respective functions
-        self.b0.clicked.connect(lambda: self.add_number('0'))
-        self.b1.clicked.connect(lambda: self.add_number('1'))
-        self.b2.clicked.connect(lambda: self.add_number('2'))
-        self.b3.clicked.connect(lambda: self.add_number('3'))
-        self.b4.clicked.connect(lambda: self.add_number('4'))
-        self.b5.clicked.connect(lambda: self.add_number('5'))
-        self.b6.clicked.connect(lambda: self.add_number('6'))
-        self.b7.clicked.connect(lambda: self.add_number('7'))
-        self.b8.clicked.connect(lambda: self.add_number('8'))
-        self.b9.clicked.connect(lambda: self.add_number('9'))
+        self.b0.clicked.connect(lambda: self.add_number("0"))
+        self.b1.clicked.connect(lambda: self.add_number("1"))
+        self.b2.clicked.connect(lambda: self.add_number("2"))
+        self.b3.clicked.connect(lambda: self.add_number("3"))
+        self.b4.clicked.connect(lambda: self.add_number("4"))
+        self.b5.clicked.connect(lambda: self.add_number("5"))
+        self.b6.clicked.connect(lambda: self.add_number("6"))
+        self.b7.clicked.connect(lambda: self.add_number("7"))
+        self.b8.clicked.connect(lambda: self.add_number("8"))
+        self.b9.clicked.connect(lambda: self.add_number("9"))
 
         self.Del.clicked.connect(self.delete_number)
         self.enter.clicked.connect(self.enter_pressed)
         self.Retry.clicked.connect(self.show_output)
         self.cross.clicked.connect(self.destroy)
-        
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-        
+
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
@@ -1581,24 +1758,25 @@ class NumericKeyboard(QMainWindow):
 
     def check_number_api(self):
         self.url = "http://filesharing.n2rtech.com/api/mobile-verify"
-        self.payload = {'mobile': self.number}
+        self.payload = {"mobile": self.number}
         self.files = []
         self.headers = {}
         self.response = requests.request(
-            "POST", self.url, headers=self.headers, data=self.payload, files=self.files)
+            "POST", self.url, headers=self.headers, data=self.payload, files=self.files
+        )
 
         # Parse the JSON string into a Python dictionary
         self.parsed_data = json.loads(self.response.text)
 
         # Check if 'success' or 'error' key exists in the parsed data
-        if 'success' in self.parsed_data:
-            success = self.parsed_data['success']
-            if self.parsed_data['firstname']:
-                firstname = self.parsed_data['firstname']
+        if "success" in self.parsed_data:
+            success = self.parsed_data["success"]
+            if self.parsed_data["firstname"]:
+                firstname = self.parsed_data["firstname"]
                 self.name = str(firstname)
                 print(f"First name: {firstname}")
-            if self.parsed_data['lastname']:
-                lastname = self.parsed_data['lastname']
+            if self.parsed_data["lastname"]:
+                lastname = self.parsed_data["lastname"]
                 self.name += str(lastname)
                 print(f"Last name: {lastname}")
 
@@ -1608,9 +1786,9 @@ class NumericKeyboard(QMainWindow):
             self.username.setText(self.name)
             self.number_found = True
 
-        elif 'error' in self.parsed_data:
-            self.error = self.parsed_data['error']
-            self.response_message = self.parsed_data['response']
+        elif "error" in self.parsed_data:
+            self.error = self.parsed_data["error"]
+            self.response_message = self.parsed_data["response"]
             self.username.setText("Number not found!!!")
 
             # Print the error message
@@ -1626,7 +1804,7 @@ class NumericKeyboard(QMainWindow):
 class DataSentWindow(QMainWindow):
     def __init__(self, file_path, stacked_widget):
         super().__init__()
-        loadUi('w6.ui', self)
+        loadUi("w6.ui", self)
 
         # Set the window size
         self.resize(1024, 600)
@@ -1637,11 +1815,11 @@ class DataSentWindow(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.go_home)
         self.timer.start(5000)
-        
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-        
+
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
@@ -1649,8 +1827,7 @@ class DataSentWindow(QMainWindow):
 
     def go_home(self):
         self.timer.stop()
-        self.SettingWindow_window = SettingWindow(
-            self.stacked_widget)
+        self.SettingWindow_window = SettingWindow(self.stacked_widget)
         self.stacked_widget.addWidget(self.SettingWindow_window)
         self.stacked_widget.setCurrentWidget(self.SettingWindow_window)
 
@@ -1658,7 +1835,7 @@ class DataSentWindow(QMainWindow):
 class PrintRetrievalCode(QMainWindow):
     def __init__(self, file_path, stacked_widget, code):
         super().__init__()
-        loadUi('w5.ui', self)
+        loadUi("w5.ui", self)
 
         # Set the window size
         self.resize(1024, 600)
@@ -1671,25 +1848,26 @@ class PrintRetrievalCode(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.go_home)
         self.timer.start(5000)
-        
+
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-        
+
     def update_system_time(self):
         current_time = shared_data.time
         self.time.setPlainText(f" {current_time}")
         self.date.setPlainText(f" {shared_data.date}")
 
     def thermal_print(self):
-        p = Serial(devfile='/dev/ttySC1',
-                   baudrate=9600,
-                   bytesize=8,
-                   parity='N',
-                   stopbits=1,
-                   timeout=1.00,
-                   dsrdtr=True
-                   )
+        p = Serial(
+            devfile="/dev/ttySC1",
+            baudrate=9600,
+            bytesize=8,
+            parity="N",
+            stopbits=1,
+            timeout=1.00,
+            dsrdtr=True,
+        )
         p.set(
             align="center",
             font="b",
@@ -1721,13 +1899,14 @@ class PrintRetrievalCode(QMainWindow):
             align="left",
         )
         p.text("\n")
-        p.text("""Retrieve receipt on repslips.com\nSteps:\n1) Sign up / Log on to:  \n     repslips.com\n2) Click on menu -->RETRIVAL \n3) Type the above code and SUBMIT \n4) View on recent Receipt \nEnjoy.........\n\n\n""")
+        p.text(
+            """Retrieve receipt on repslips.com\nSteps:\n1) Sign up / Log on to:  \n     repslips.com\n2) Click on menu -->RETRIVAL \n3) Type the above code and SUBMIT \n4) View on recent Receipt \nEnjoy.........\n\n\n"""
+        )
         print("done")
 
     def go_home(self):
         self.timer.stop()
-        self.SettingWindow_window = SettingWindow(
-            self.stacked_widget)
+        self.SettingWindow_window = SettingWindow(self.stacked_widget)
         self.stacked_widget.addWidget(self.SettingWindow_window)
         self.stacked_widget.setCurrentWidget(self.SettingWindow_window)
 
@@ -1741,7 +1920,7 @@ class DirectoryChecker(QObject):
 
     def check_directory(self):
         # directory_path = '/home/decas/PDF/'
-        directory_path = '/var/spool/cups-pdf/ANONYMOUS/'
+        directory_path = "/var/spool/cups-pdf/ANONYMOUS/"
         # directory_path = 'D:/DecasUI/DecasUI/ANONYMOUS/'
 
         contents = os.listdir(directory_path)
@@ -1779,10 +1958,10 @@ class MyApp(QApplication):
                 ser.write(bytes.fromhex(self.single_scanning_time_command))
                 ser.write(bytes.fromhex(self.command_mode_command))
                 ser.close()
-        
+
         except Exception as e:
             print(f"Error: {e}")
-            
+
         self.stacked_widget = QStackedWidget()
 
         self.setting_window = SettingWindow(self.stacked_widget)
@@ -1790,7 +1969,7 @@ class MyApp(QApplication):
         self.stacked_widget.showFullScreen()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = MyApp()
     sys.exit(app.exec_())
 

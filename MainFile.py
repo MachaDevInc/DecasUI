@@ -1831,15 +1831,6 @@ class DataSentWindow(QMainWindow):
         self.timer.timeout.connect(self.go_home)
         self.timer.start(5000)
 
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_system_time)
-        self.timer.start(1000)
-
-    def update_system_time(self):
-        current_time = shared_data.time
-        self.time.setPlainText(f" {current_time}")
-        self.date.setPlainText(f" {shared_data.date}")
-
     def go_home(self):
         self.timer.stop()
         self.SettingWindow_window = SettingWindow(self.stacked_widget)
@@ -1863,15 +1854,6 @@ class PrintRetrievalCode(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.go_home)
         self.timer.start(5000)
-
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_system_time)
-        self.timer.start(1000)
-
-    def update_system_time(self):
-        current_time = shared_data.time
-        self.time.setPlainText(f" {current_time}")
-        self.date.setPlainText(f" {shared_data.date}")
 
     def thermal_print(self):
         p = Serial(

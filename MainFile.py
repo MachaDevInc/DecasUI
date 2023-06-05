@@ -256,6 +256,15 @@ class connectionWindow(QMainWindow):
         # Set the window size
         self.resize(1024, 600)
         self.back.clicked.connect(self.go_back)
+        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_system_time)
+        self.timer.start(1000)
+        
+    def update_system_time(self):
+        current_time = shared_data.time
+        self.time.setPlainText(f" {current_time}")
+        self.date.setPlainText(f" {shared_data.date}")
 
     def go_back(self):
         self.setting_window = SettingWindow(self.stacked_widget)
@@ -273,6 +282,15 @@ class workWindow(JobsMainWindow):
 
         self.show_jobs()
         self.back.clicked.connect(self.go_back)
+        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_system_time)
+        self.timer.start(1000)
+        
+    def update_system_time(self):
+        current_time = shared_data.time
+        self.time.setPlainText(f" {current_time}")
+        self.date.setPlainText(f" {shared_data.date}")
 
     def go_back(self):
         self.setting_window = SettingWindow(self.stacked_widget)
@@ -350,14 +368,15 @@ class USBWindow(QMainWindow):
         self.wifi.clicked.connect(self.open_wifi)
         self.about.clicked.connect(self.open_about)
         self.rs.clicked.connect(self.open_rs)
+        
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_system_time)
         self.timer.start(1000)
-
+        
     def update_system_time(self):
         current_time = shared_data.time
-        self.timeEdit.setTime(QTime.fromString(current_time))
-        self.dateEdit.setDate(QDate.fromString(shared_data.date, "yyyy-MM-dd"))
+        self.time.setPlainText(f" {current_time}")
+        self.date.setPlainText(f" {shared_data.date}")
 
     # def open_wifi(self):
     #     # Show the existing wifi_window instance
@@ -413,6 +432,15 @@ class aboutWindow(QMainWindow):
         self.back.clicked.connect(self.go_back)
         # Google's DNS as target to get the local ip
         print(self.get_local_ip_address('8.8.8.8'))
+        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_system_time)
+        self.timer.start(1000)
+        
+    def update_system_time(self):
+        current_time = shared_data.time
+        self.time.setPlainText(f" {current_time}")
+        self.date.setPlainText(f" {shared_data.date}")
 
     def go_back(self):
         self.setting_window = SettingWindow(self.stacked_widget)
@@ -623,6 +651,15 @@ class RSWindow(QMainWindow):
         self.baudrate.activated[str].connect(self.on_combobox_activated)
 
         self.parity.activated[str].connect(self.on_combobox_activated1)
+        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_system_time)
+        self.timer.start(1000)
+        
+    def update_system_time(self):
+        current_time = shared_data.time
+        self.time.setPlainText(f" {current_time}")
+        self.date.setPlainText(f" {shared_data.date}")
 
     def on_combobox_activated(self, text):
         print(f"Selected option: {text}")
@@ -658,6 +695,15 @@ class usbWindow(QMainWindow):
 
         # Connect the combo box's activated signal to a slot function
         self.comport.activated[str].connect(self.on_combobox_activated)
+        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_system_time)
+        self.timer.start(1000)
+        
+    def update_system_time(self):
+        current_time = shared_data.time
+        self.time.setPlainText(f" {current_time}")
+        self.date.setPlainText(f" {shared_data.date}")
 
     def on_combobox_activated(self, text):
         print(f"Selected option: {text}")
@@ -696,6 +742,15 @@ class bluetoothWindow(QMainWindow):
         self.back.clicked.connect(self.go_back)
         # Connect the combo box's activated signal to a slot function
         self.bluetooth1.activated[str].connect(self.on_combobox_activated)
+        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_system_time)
+        self.timer.start(1000)
+        
+    def update_system_time(self):
+        current_time = shared_data.time
+        self.time.setPlainText(f" {current_time}")
+        self.date.setPlainText(f" {shared_data.date}")
 
     def refresh_bluetooth_scan(self):
         self.bluetooth1.clear()
@@ -1323,6 +1378,15 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         self.numeric_keyboard = NumericKeyboard(
             self, self.stacked_widget, self, self.scanThread, self.file_path)
         self.stacked_widget.addWidget(self.numeric_keyboard)
+        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_system_time)
+        self.timer.start(1000)
+        
+    def update_system_time(self):
+        current_time = shared_data.time
+        self.time.setPlainText(f" {current_time}")
+        self.date.setPlainText(f" {shared_data.date}")
             
     def update_user_id(self, user_id=""):
         if user_id != "":
@@ -1472,6 +1536,15 @@ class NumericKeyboard(QMainWindow):
         self.enter.clicked.connect(self.enter_pressed)
         self.Retry.clicked.connect(self.show_output)
         self.cross.clicked.connect(self.destroy)
+        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_system_time)
+        self.timer.start(1000)
+        
+    def update_system_time(self):
+        current_time = shared_data.time
+        self.time.setPlainText(f" {current_time}")
+        self.date.setPlainText(f" {shared_data.date}")
 
     def add_number(self, number):
         current_text = self.textEdit.toPlainText()
@@ -1564,6 +1637,15 @@ class DataSentWindow(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.go_home)
         self.timer.start(5000)
+        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_system_time)
+        self.timer.start(1000)
+        
+    def update_system_time(self):
+        current_time = shared_data.time
+        self.time.setPlainText(f" {current_time}")
+        self.date.setPlainText(f" {shared_data.date}")
 
     def go_home(self):
         self.timer.stop()
@@ -1589,6 +1671,15 @@ class PrintRetrievalCode(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.go_home)
         self.timer.start(5000)
+        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_system_time)
+        self.timer.start(1000)
+        
+    def update_system_time(self):
+        current_time = shared_data.time
+        self.time.setPlainText(f" {current_time}")
+        self.date.setPlainText(f" {shared_data.date}")
 
     def thermal_print(self):
         p = Serial(devfile='/dev/ttySC1',

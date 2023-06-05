@@ -1621,12 +1621,7 @@ class PrintRetrievalCode(QMainWindow):
             align="left",
         )
         p.text("\n")
-        p.text("""Retrieve receipt on repslips.com\nSteps:\n
-        1) Sign up / Log on to:  \n
-                repslips.com\n2) Click on menu -->RETRIVAL \n
-        3) Type the above code and SUBMIT \n
-        4) View on recent Receipt \n
-        Enjoy.........\n\n\n""")
+        p.text("""Retrieve receipt on repslips.com\nSteps:\n1) Sign up / Log on to:  \n     repslips.com\n2) Click on menu -->RETRIVAL \n3) Type the above code and SUBMIT \n4) View on recent Receipt \nEnjoy.........\n\n\n""")
         print("done")
 
     def go_home(self):

@@ -266,6 +266,9 @@
     </property>
    </widget>
    <widget class="QTimeEdit" name="timeEdit">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>860</x>
@@ -326,6 +329,9 @@
     </property>
    </widget>
    <widget class="QCheckBox" name="checkBox">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>190</x>
@@ -334,20 +340,56 @@
       <height>51</height>
      </rect>
     </property>
+    <property name="sizeIncrement">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="baseSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
     <property name="font">
      <font>
       <family>MS Shell rgb(0, 0, 0)Dlg 2</family>
-      <pointsize>16</pointsize>
+      <pointsize>22</pointsize>
       <weight>9</weight>
       <italic>false</italic>
       <bold>false</bold>
      </font>
     </property>
+    <property name="mouseTracking">
+     <bool>true</bool>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
     <property name="styleSheet">
-     <string notr="true">font: 75 16pt &quot;MS Shell rgb(0, 0, 0)Dlg 2&quot;;</string>
+     <string notr="true">font: 75 22pt &quot;MS Shell rgb(0, 0, 0)Dlg 2&quot;;</string>
+    </property>
+    <property name="inputMethodHints">
+     <set>Qt::ImhNone</set>
     </property>
     <property name="text">
      <string>Automatic Update</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>30</width>
+      <height>30</height>
+     </size>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
+    </property>
+    <property name="autoRepeat">
+     <bool>false</bool>
+    </property>
+    <property name="tristate">
+     <bool>false</bool>
     </property>
    </widget>
    <zorder>label</zorder>

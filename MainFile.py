@@ -1757,6 +1757,7 @@ class NumericKeyboard(QMainWindow):
         self.hide()
 
     def check_number_api(self):
+        self.myText = ""
         self.url = "http://filesharing.n2rtech.com/api/mobile-verify"
         self.payload = {"mobile": self.number}
         self.files = []
@@ -1764,6 +1765,8 @@ class NumericKeyboard(QMainWindow):
         self.response = requests.request(
             "POST", self.url, headers=self.headers, data=self.payload, files=self.files
         )
+
+        _translate = QtCore.QCoreApplication.translate
 
         # Parse the JSON string into a Python dictionary
         self.parsed_data = json.loads(self.response.text)
@@ -1783,13 +1786,13 @@ class NumericKeyboard(QMainWindow):
             # Print the extracted values
             print(f"Success: {success}")
             print(f"Name: {self.name}")
-            self.username.setText(self.name)
+            self.myText = self.name
             self.number_found = True
 
         elif "error" in self.parsed_data:
             self.error = self.parsed_data["error"]
             self.response_message = self.parsed_data["response"]
-            self.username.setText("Number not found!!!")
+            self.myText = "Number not found!!!"
 
             # Print the error message
             print(f"Error: {self.error}")
@@ -1799,6 +1802,18 @@ class NumericKeyboard(QMainWindow):
         else:
             print("Unexpected response format.")
             self.number_found = False
+        self.username.setHtml(
+            _translate(
+                "MainWindow4",
+                '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
+                '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
+                "p, li { white-space: pre-wrap; }\n"
+                "</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:24pt; font-weight:600; font-style:normal;\">\n"
+                '<p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:22pt;">'
+                + self.myText
+                + "</span></p></body></html>",
+            )
+        )
 
 
 class DataSentWindow(QMainWindow):

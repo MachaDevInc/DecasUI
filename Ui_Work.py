@@ -156,7 +156,6 @@ class JobsMainWindow(QMainWindow):
         self.search.raise_()
         self.label.raise_()
         self.label_2.raise_()
-        self.textEdit.raise_()
         self.back.raise_()
         self.search_text.raise_()
         self.textBrowser_2.raise_()

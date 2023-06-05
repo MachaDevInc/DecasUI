@@ -171,10 +171,13 @@
     </property>
    </widget>
    <widget class="QPushButton" name="Retry">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>430</x>
-      <y>120</y>
+      <y>60</y>
       <width>140</width>
       <height>61</height>
      </rect>
@@ -935,6 +938,29 @@ p, li { white-space: pre-wrap; }
      <bool>true</bool>
     </property>
    </widget>
+   <zorder>label</zorder>
+   <zorder>tex</zorder>
+   <zorder>label_2</zorder>
+   <zorder>enter</zorder>
+   <zorder>Retry</zorder>
+   <zorder>b1</zorder>
+   <zorder>b2</zorder>
+   <zorder>b3</zorder>
+   <zorder>b4</zorder>
+   <zorder>b5</zorder>
+   <zorder>b6</zorder>
+   <zorder>b7</zorder>
+   <zorder>b8</zorder>
+   <zorder>b9</zorder>
+   <zorder>b0</zorder>
+   <zorder>Del</zorder>
+   <zorder>textEdit</zorder>
+   <zorder>username</zorder>
+   <zorder>textBrowser</zorder>
+   <zorder>cross</zorder>
+   <zorder>time</zorder>
+   <zorder>date</zorder>
+   <zorder>textBrowser_3</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

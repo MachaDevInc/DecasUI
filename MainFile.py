@@ -1536,9 +1536,9 @@ class SettingsWindow1(QMainWindow, Ui_MainWindow3):
         )
         self.stacked_widget.addWidget(self.numeric_keyboard)
 
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_system_time)
-        self.timer.start(1000)
+        self.timer1 = QTimer(self)
+        self.timer1.timeout.connect(self.update_system_time)
+        self.timer1.start(1000)
 
     def update_system_time(self):
         current_time = shared_data.time

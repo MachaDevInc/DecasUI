@@ -269,9 +269,9 @@
     <property name="geometry">
      <rect>
       <x>860</x>
-      <y>30</y>
+      <y>20</y>
       <width>141</width>
-      <height>31</height>
+      <height>51</height>
      </rect>
     </property>
     <property name="font">
@@ -311,7 +311,7 @@
       <x>40</x>
       <y>30</y>
       <width>141</width>
-      <height>31</height>
+      <height>51</height>
      </rect>
     </property>
     <property name="font">
@@ -325,72 +325,29 @@
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QPushButton" name="automatic">
+   <widget class="QCheckBox" name="checkBox">
     <property name="geometry">
      <rect>
       <x>190</x>
       <y>30</y>
-      <width>121</width>
-      <height>31</height>
+      <width>300</width>
+      <height>51</height>
      </rect>
-    </property>
-    <property name="palette">
-     <palette>
-      <active>
-       <colorrole role="Button">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>85</red>
-          <green>170</green>
-          <blue>255</blue>
-         </color>
-        </brush>
-       </colorrole>
-      </active>
-      <inactive>
-       <colorrole role="Button">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>85</red>
-          <green>170</green>
-          <blue>255</blue>
-         </color>
-        </brush>
-       </colorrole>
-      </inactive>
-      <disabled>
-       <colorrole role="Button">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>85</red>
-          <green>170</green>
-          <blue>255</blue>
-         </color>
-        </brush>
-       </colorrole>
-      </disabled>
-     </palette>
     </property>
     <property name="font">
      <font>
-      <family>MS Shell Dlg 2</family>
+      <family>MS Shell rgb(0, 0, 0)Dlg 2</family>
       <pointsize>16</pointsize>
       <weight>9</weight>
       <italic>false</italic>
       <bold>false</bold>
      </font>
     </property>
-    <property name="autoFillBackground">
-     <bool>true</bool>
-    </property>
     <property name="styleSheet">
-     <string notr="true">font: 75 16pt &quot;MS Shell Dlg 2&quot;;</string>
+     <string notr="true">font: 75 16pt &quot;MS Shell rgb(0, 0, 0)Dlg 2&quot;;</string>
     </property>
     <property name="text">
-     <string>Automatic</string>
-    </property>
-    <property name="flat">
-     <bool>true</bool>
+     <string>Automatic Update</string>
     </property>
    </widget>
    <zorder>label</zorder>
@@ -406,7 +363,7 @@
    <zorder>label_2</zorder>
    <zorder>timeEdit</zorder>
    <zorder>dateEdit</zorder>
-   <zorder>automatic</zorder>
+   <zorder>checkBox</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

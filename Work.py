@@ -25,6 +25,7 @@ class Ui_work(object):
         self.label.setObjectName("label")
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
         self.label_2.setGeometry(QtCore.QRect(20, 0, 250, 100))
+        self.label_2.setAutoFillBackground(False)
         self.label_2.setScaledContents(True)
         self.label_2.setObjectName("label_2")
         self.textEdit = QtWidgets.QTextEdit(self.centralwidget)
@@ -43,11 +44,8 @@ class Ui_work(object):
         self.back.setIconSize(QtCore.QSize(75, 75))
         self.back.setFlat(True)
         self.back.setObjectName("back")
-        self.search_text = QtWidgets.QTextEdit(self.centralwidget)
-        self.search_text.setGeometry(QtCore.QRect(570, 40, 271, 45))
-        self.search_text.setObjectName("search_text")
         self.textBrowser_2 = QtWidgets.QTextBrowser(self.centralwidget)
-        self.textBrowser_2.setGeometry(QtCore.QRect(850, 40, 140, 45))
+        self.textBrowser_2.setGeometry(QtCore.QRect(850, 30, 140, 60))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -64,7 +62,7 @@ class Ui_work(object):
         self.textBrowser_2.setLineWidth(4)
         self.textBrowser_2.setObjectName("textBrowser_2")
         self.search = QtWidgets.QPushButton(self.centralwidget)
-        self.search.setGeometry(QtCore.QRect(850, 40, 140, 45))
+        self.search.setGeometry(QtCore.QRect(850, 30, 140, 60))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(85, 170, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -85,6 +83,15 @@ class Ui_work(object):
         self.search.setDefault(False)
         self.search.setFlat(True)
         self.search.setObjectName("search")
+        self.search_text = QtWidgets.QLabel(self.centralwidget)
+        self.search_text.setGeometry(QtCore.QRect(570, 30, 271, 60))
+        self.search_text.setStatusTip("")
+        self.search_text.setWhatsThis("")
+        self.search_text.setAutoFillBackground(True)
+        self.search_text.setTextFormat(QtCore.Qt.AutoText)
+        self.search_text.setScaledContents(True)
+        self.search_text.setWordWrap(False)
+        self.search_text.setObjectName("search_text")
         work.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(work)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1024, 21))
@@ -101,13 +108,9 @@ class Ui_work(object):
         _translate = QtCore.QCoreApplication.translate
         work.setWindowTitle(_translate("work", "MainWindow"))
         self.label_2.setText(_translate("work", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">RECENT JOBS</span></p></body></html>"))
-        self.search_text.setHtml(_translate("work", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
-"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
         self.textBrowser_2.setHtml(_translate("work", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Search</span></p></body></html>"))
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:22pt; font-weight:600;\">Search</span></p></body></html>"))
+        self.search_text.setText(_translate("work", "<html><head/><body><p align=\"center\"><span style=\" font-size:22pt; font-weight:600;\">RECENT JOBS</span></p></body></html>"))

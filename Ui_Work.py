@@ -138,8 +138,11 @@ class JobsMainWindow(QMainWindow):
         self.back.setIconSize(QSize(75, 75))
         self.back.setFlat(True)
         self.back.setObjectName("back")
+        self.search_text = QTextEdit(self.centralwidget)
+        self.search_text.setGeometry(QRect(570, 40, 271, 45))
+        self.search_text.setObjectName("search_text")
         self.textBrowser_2 = QTextBrowser(self.centralwidget)
-        self.textBrowser_2.setGeometry(QRect(850, 30, 140, 60))
+        self.textBrowser_2.setGeometry(QRect(850, 40, 140, 45))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 0))
         brush.setStyle(Qt.SolidPattern)
@@ -156,7 +159,7 @@ class JobsMainWindow(QMainWindow):
         self.textBrowser_2.setLineWidth(4)
         self.textBrowser_2.setObjectName("textBrowser_2")
         self.search = QPushButton(self.centralwidget)
-        self.search.setGeometry(QRect(850, 30, 140, 60))
+        self.search.setGeometry(QRect(850, 40, 140, 45))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(85, 170, 255))
         brush.setStyle(Qt.SolidPattern)
@@ -177,15 +180,6 @@ class JobsMainWindow(QMainWindow):
         self.search.setDefault(False)
         self.search.setFlat(True)
         self.search.setObjectName("search")
-        self.search_text = QLabel(self.centralwidget)
-        self.search_text.setGeometry(QRect(570, 30, 271, 60))
-        self.search_text.setStatusTip("")
-        self.search_text.setWhatsThis("")
-        self.search_text.setAutoFillBackground(True)
-        self.search_text.setTextFormat(Qt.AutoText)
-        self.search_text.setScaledContents(True)
-        self.search_text.setWordWrap(False)
-        self.search_text.setObjectName("search_text")
         self.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(self)
         self.menubar.setGeometry(QRect(0, 0, 1024, 21))
@@ -205,7 +199,7 @@ class JobsMainWindow(QMainWindow):
                 '<html><head/><body><p align="center"><span style=" font-size:22pt; font-weight:600;">RECENT JOBS</span></p></body></html>',
             )
         )
-        self.search_text.setText(
+        self.search_text.setHtml(
             _translate(
                 "JobsMainWindow",
                 '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
@@ -215,9 +209,9 @@ class JobsMainWindow(QMainWindow):
                 '<p align="center" style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>',
             )
         )
-        self.textBrowser_2.setText(
+        self.textBrowser_2.setHtml(
             _translate(
-                "work",
+                "JobsMainWindow",
                 '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
                 '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
                 "p, li { white-space: pre-wrap; }\n"

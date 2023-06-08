@@ -126,9 +126,27 @@ class VirtualKeyboard(tk.Tk):
         self.caps_lock_on = False
         self.shift_on = False
         self.buttons = []  # to keep track of all the buttons
+        
+        self.on_enter_callback = on_enter_callback
+
         self.create_keyboard()
 
-        self.on_enter_callback = on_enter_callback
+        # Calculate the screen width and height
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+
+        # Calculate the keyboard window width and height
+        keyboard_width = self.winfo_reqwidth()
+        keyboard_height = self.winfo_reqheight()
+
+        # Calculate the x and y coordinates to center the keyboard window
+        x = (screen_width // 2) - keyboard_width
+        y = (screen_height // 2) - keyboard_height
+
+        # Set the keyboard window to fullscreen
+        # self.attributes("-fullscreen", True)
+        # Set the keyboard window position
+        self.geometry(f"+{50}+{y}")
 
     def create_keyboard(self):
         for row_index, row in enumerate(self.keys, start=1):

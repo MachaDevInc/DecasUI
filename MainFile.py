@@ -201,12 +201,15 @@ class VirtualKeyboard(tk.Tk):
 
 
 class SharedData(QObject):
+    date_updated = pyqtSignal(str)
+    time_updated = pyqtSignal(str)
+
     def __init__(self):
         super().__init__()
         self._date = None
         self._time = None
         self._date = QDate.currentDate().toString("dd-MM-yyyy")
-        self._time = QTime.currentTime().toString()
+        self._time = QTime.currentTime().toString("hh:mm:ss")
 
     @property
     def date(self):
@@ -227,13 +230,13 @@ class SharedData(QObject):
         self.time_updated.emit(value)
 
     def set_system_time(self, date, time):
-        self.date = date.toString()
-        self.time = time.toString()
+        self.date = date.toString("dd-MM-yyyy")
+        self.time = time.toString("hh:mm:ss")
 
     def update_time(self):
-        current_time = QTime.fromString(self.time)
+        current_time = QTime.fromString(self.time, "hh:mm:ss")
         current_time = current_time.addSecs(1)
-        self.time = current_time.toString()
+        self.time = current_time.toString("hh:mm:ss")
 
 
 def update_shared_data_time():
@@ -456,10 +459,30 @@ class USBWindow(QMainWindow):
         self.about.clicked.connect(self.open_about)
         self.rs.clicked.connect(self.open_rs)
 
-    # def open_wifi(self):
-    #     # Show the existing wifi_window instance
-    #     self.wifi_window.showFullScreen()
-    #     self.hide()
+        self.shared_data = shared_data
+        # Connect signals to slots
+        self.date_edit.dateChanged.connect(self.update_date)
+        self.time_edit.timeChanged.connect(self.update_time)
+
+        self.checkBox.stateChanged.connect(self.enable_edit_date_time)
+
+    def enable_edit_date_time(self, state):
+        if state == 0:
+            self.dateEdit.setEnabled(False)
+            self.timeEdit.setEnabled(False)
+
+        elif state == 2:
+            self.dateEdit.setEnabled(True)
+            self.timeEdit.setEnabled(True)
+
+            self._date = QDate.currentDate().toString("dd-MM-yyyy")
+            self._time = QTime.currentTime().toString("hh:mm:ss")
+
+    def update_date(self, date):
+        self.shared_data.date = date.toString("dd-MM-yyyy")
+
+    def update_time(self, time):
+        self.shared_data.time = time.toString("hh:mm:ss")
 
     def go_back(self):
         self.setting_window = SettingWindow(self.stacked_widget)

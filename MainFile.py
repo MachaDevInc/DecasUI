@@ -205,7 +205,7 @@ class SharedData(QObject):
         super().__init__()
         self._date = None
         self._time = None
-        self._date = QDate.currentDate().toString("yyyy-MM-dd")
+        self._date = QDate.currentDate().toString("dd-MM-yyyy")
         self._time = QTime.currentTime().toString()
 
     @property

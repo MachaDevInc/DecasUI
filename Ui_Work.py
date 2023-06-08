@@ -138,9 +138,9 @@ class JobsMainWindow(QMainWindow):
         self.back.setIconSize(QSize(75, 75))
         self.back.setFlat(True)
         self.back.setObjectName("back")
-        self.search_text = QTextEdit(self.centralwidget)
-        self.search_text.setGeometry(QRect(570, 30, 271, 60))
-        self.search_text.setObjectName("search_text")
+        self.textEdit1 = QTextEdit(self.centralwidget)
+        self.textEdit1.setGeometry(QRect(570, 30, 271, 60))
+        self.textEdit1.setObjectName("textEdit1")
         self.textBrowser_2 = QTextBrowser(self.centralwidget)
         self.textBrowser_2.setGeometry(QRect(850, 30, 140, 60))
         palette = QtGui.QPalette()
@@ -180,6 +180,28 @@ class JobsMainWindow(QMainWindow):
         self.search.setDefault(False)
         self.search.setFlat(True)
         self.search.setObjectName("search")
+        self.search1 = QPushButton(self.centralwidget)
+        self.search1.setGeometry(QRect(570, 30, 271, 60))
+        palette = QtGui.QPalette()
+        brush = QtGui.QBrush(QtGui.QColor(85, 170, 255))
+        brush.setStyle(Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Button, brush)
+        brush = QtGui.QBrush(QtGui.QColor(85, 170, 255))
+        brush.setStyle(Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Button, brush)
+        brush = QtGui.QBrush(QtGui.QColor(85, 170, 255))
+        brush.setStyle(Qt.SolidPattern)
+        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Button, brush)
+        self.search1.setPalette(palette)
+        self.search1.setLayoutDirection(Qt.LeftToRight)
+        self.search1.setAutoFillBackground(False)
+        self.search1.setStyleSheet('font: 75 24pt "MS Shell Dlg 2";')
+        self.search1.setText("")
+        self.search1.setIconSize(QSize(100, 100))
+        self.search1.setAutoDefault(False)
+        self.search1.setDefault(False)
+        self.search1.setFlat(True)
+        self.search1.setObjectName("search1")
         self.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(self)
         self.menubar.setGeometry(QRect(0, 0, 1024, 21))
@@ -199,14 +221,14 @@ class JobsMainWindow(QMainWindow):
                 '<html><head/><body><p align="center"><span style=" font-size:22pt; font-weight:600;">RECENT JOBS</span></p></body></html>',
             )
         )
-        self.search_text.setHtml(
+        self.textEdit1.setHtml(
             _translate(
                 "JobsMainWindow",
                 '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
                 '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
                 "p, li { white-space: pre-wrap; }\n"
                 "</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
-                '<p align="center" style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>',
+                '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>',
             )
         )
         self.textBrowser_2.setHtml(

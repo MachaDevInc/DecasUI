@@ -340,7 +340,7 @@ class workWindow(JobsMainWindow):
         self.resize(1024, 600)
 
         self.show_jobs()
-        self.search.clicked.connect(self.show_jobs())
+        self.search.clicked.connect(self.show_jobs)
         self.back.clicked.connect(self.go_back)
         
         self.search1.clicked.connect(

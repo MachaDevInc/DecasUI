@@ -333,6 +333,8 @@ class workWindow(JobsMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
         self.stacked_widget = stacked_widget
+        
+        self._translate = QtCore.QCoreApplication.translate
 
         # Set the window size
         self.resize(1024, 600)
@@ -345,11 +347,21 @@ class workWindow(JobsMainWindow):
         )
 
     def update_text_edit(self, text_edit1, entered_text):
-        text_edit1.setPlainText(entered_text)
+        text_edit1.setHtml(
+            self._translate(
+                "self",
+                '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
+                '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
+                "p, li { white-space: pre-wrap; }\n"
+                "</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
+                '<p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:22pt; font-weight:600;">' + entered_text + '</span></p></body></html>',
+            )
+        )
 
     def open_virtual_keyboard(self, text_edit):
         virtual_keyboard = VirtualKeyboard(
             lambda entered_text: self.update_text_edit(text_edit, entered_text)
+            
         )
         virtual_keyboard.mainloop()
 

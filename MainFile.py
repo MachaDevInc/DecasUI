@@ -339,6 +339,10 @@ class workWindow(JobsMainWindow):
 
         self.show_jobs()
         self.back.clicked.connect(self.go_back)
+        
+        self.search1.clicked.connect(
+            lambda: self.open_virtual_keyboard(self.textEdit1)
+        )
 
     def go_back(self):
         self.setting_window = SettingWindow(self.stacked_widget)

@@ -200,7 +200,7 @@
      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:22pt; font-weight:600;&quot;&gt;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
    </widget>
-   <widget class="QLabel" name="Retrieve_2">
+   <widget class="QLabel" name="next">
     <property name="geometry">
      <rect>
       <x>70</x>
@@ -225,6 +225,16 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
+   <zorder>label_2</zorder>
+   <zorder>RFID_Icon</zorder>
+   <zorder>label_3</zorder>
+   <zorder>QR_Icon</zorder>
+   <zorder>label_5</zorder>
+   <zorder>Retrieve</zorder>
+   <zorder>Retreive</zorder>
+   <zorder>notification</zorder>
+   <zorder>next</zorder>
+   <zorder>next1</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

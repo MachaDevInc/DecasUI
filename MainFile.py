@@ -333,13 +333,14 @@ class workWindow(JobsMainWindow):
     def __init__(self, stacked_widget):
         super().__init__()
         self.stacked_widget = stacked_widget
-        
+        self.search_keyword = ""
         self._translate = QtCore.QCoreApplication.translate
 
         # Set the window size
         self.resize(1024, 600)
 
         self.show_jobs()
+        self.search.clicked.connect(self.show_jobs())
         self.back.clicked.connect(self.go_back)
         
         self.search1.clicked.connect(
@@ -347,6 +348,7 @@ class workWindow(JobsMainWindow):
         )
 
     def update_text_edit(self, text_edit1, entered_text):
+        self.search_keyword = entered_text
         text_edit1.setHtml(
             self._translate(
                 "self",
@@ -354,7 +356,7 @@ class workWindow(JobsMainWindow):
                 '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
                 "p, li { white-space: pre-wrap; }\n"
                 "</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
-                '<p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:22pt; font-weight:600;">' + entered_text + '</span></p></body></html>',
+                '<p align="center" style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-size:22pt; font-weight:600;">' + self.search_keyword + '</span></p></body></html>',
             )
         )
 
@@ -390,12 +392,21 @@ class workWindow(JobsMainWindow):
         if jobs:
             for key, value in jobs.items():
                 # Replace this with your actual data
-                data = value["job_title"]
-                if value["data_sent"] is True:
-                    widget = CustomWidget(key, data, self.central_widget, False, self)
+                if self.search_keyword == "":
+                    data = value["job_title"]
+                    if value["data_sent"] is True:
+                        widget = CustomWidget(key, data, self.central_widget, False, self)
+                    else:
+                        widget = CustomWidget(key, data, self.central_widget, True, self)
+                    self.scroll_layout.addWidget(widget)
                 else:
-                    widget = CustomWidget(key, data, self.central_widget, True, self)
-                self.scroll_layout.addWidget(widget)
+                    if self.search_keyword in value["receiver"]:
+                        data = value["job_title"]
+                        if value["data_sent"] is True:
+                            widget = CustomWidget(key, data, self.central_widget, False, self)
+                        else:
+                            widget = CustomWidget(key, data, self.central_widget, True, self)
+                        self.scroll_layout.addWidget(widget)
 
     def clear_layout(self, layout):
         while layout.count():

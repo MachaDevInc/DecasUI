@@ -344,6 +344,12 @@ class workWindow(JobsMainWindow):
             lambda: self.open_virtual_keyboard(self.textEdit1)
         )
 
+    def open_virtual_keyboard(self, text_edit):
+        virtual_keyboard = VirtualKeyboard(
+            lambda entered_text: self.update_text_edit(text_edit, entered_text)
+        )
+        virtual_keyboard.mainloop()
+
     def go_back(self):
         self.setting_window = SettingWindow(self.stacked_widget)
         self.setting_window.showFullScreen()

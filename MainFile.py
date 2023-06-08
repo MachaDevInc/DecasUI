@@ -344,6 +344,9 @@ class workWindow(JobsMainWindow):
             lambda: self.open_virtual_keyboard(self.textEdit1)
         )
 
+    def update_text_edit(self, text_edit1, entered_text):
+        text_edit1.setPlainText(entered_text)
+
     def open_virtual_keyboard(self, text_edit):
         virtual_keyboard = VirtualKeyboard(
             lambda entered_text: self.update_text_edit(text_edit, entered_text)

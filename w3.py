@@ -68,7 +68,7 @@ class Ui_MainWindow3(object):
         self.next1.setFlat(True)
         self.next1.setObjectName("next1")
         self.notification = QtWidgets.QLabel(self.centralwidget)
-        self.notification.setGeometry(QtCore.QRect(310, 340, 431, 50))
+        self.notification.setGeometry(QtCore.QRect(110, 340, 831, 50))
         self.notification.setObjectName("notification")
         self.next = QtWidgets.QLabel(self.centralwidget)
         self.next.setGeometry(QtCore.QRect(70, 450, 400, 71))

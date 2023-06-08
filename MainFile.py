@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QObject, pyqtSignal, QThread, QMetaObject, Q_ARG, Qt, pyqtSlot
+from PyQt5.QtCore import QObject, pyqtSignal, QThread, QEventLoop, QDateTime, QMetaObject, Q_ARG, Qt, pyqtSlot
 from PyQt5 import QtCore
 from PyQt5.QtGui import QPixmap
 import sys
@@ -41,6 +41,8 @@ import uuid
 import socket
 
 import bluetooth
+
+from ntplib import NTPClient
 
 proc1 = subprocess.Popen(["python", "progress bar.py"])
 time.sleep(1)
@@ -200,16 +202,35 @@ class VirtualKeyboard(tk.Tk):
     pass
 
 
+class TimerThread(QThread):
+    signal_time_to_update = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        self.timer = None
+
+    def run(self):
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.signal_time_to_update)
+        self.timer.start(1000)
+
+        # Event loop needed for QThread.
+        loop = QEventLoop()
+        loop.exec_()
+
+
 class SharedData(QObject):
     date_updated = pyqtSignal(str)
     time_updated = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
-        self._date = None
-        self._time = None
         self._date = QDate.currentDate().toString("dd-MM-yyyy")
         self._time = QTime.currentTime().toString("hh:mm:ss")
+
+        self.timer_thread = TimerThread()
+        self.timer_thread.signal_time_to_update.connect(self.update_system_time)
+        self.timer_thread.start()
 
     @property
     def date(self):
@@ -237,6 +258,18 @@ class SharedData(QObject):
         current_time = QTime.fromString(self.time, "hh:mm:ss")
         current_time = current_time.addSecs(1)
         self.time = current_time.toString("hh:mm:ss")
+        
+    def update_system_time(self):
+        # Parse the current date and time
+        current_date = QDate.fromString(self.date, "dd-MM-yyyy")
+        current_time = QTime.fromString(self.time, "hh:mm:ss")
+
+        # Add one second
+        current_datetime = QDateTime(current_date, current_time).addSecs(1)
+
+        # Update date and time
+        self.date = current_datetime.date().toString("dd-MM-yyyy")
+        self.time = current_datetime.time().toString("hh:mm:ss")
 
 
 def update_shared_data_time():
@@ -460,23 +493,37 @@ class USBWindow(QMainWindow):
         self.rs.clicked.connect(self.open_rs)
 
         self.shared_data = shared_data
+        self.dateEdit.setDate(QDate(2023, 1, 1))
+        self.timeEdit.setTime(QTime(00, 00, 00))
         # Connect signals to slots
-        self.date_edit.dateChanged.connect(self.update_date)
-        self.time_edit.timeChanged.connect(self.update_time)
+        self.dateEdit.dateChanged.connect(self.update_date)
+        self.timeEdit.timeChanged.connect(self.update_time)
 
         self.checkBox.stateChanged.connect(self.enable_edit_date_time)
 
     def enable_edit_date_time(self, state):
-        if state == 0:
+        if state == 2:
             self.dateEdit.setEnabled(False)
             self.timeEdit.setEnabled(False)
 
-        elif state == 2:
+            self.update_shared_data(shared_data)
+
+        elif state == 0:
+
             self.dateEdit.setEnabled(True)
             self.timeEdit.setEnabled(True)
 
-            self._date = QDate.currentDate().toString("dd-MM-yyyy")
-            self._time = QTime.currentTime().toString("hh:mm:ss")
+    def update_shared_data(self, shared_data):
+        ntp_time = self.get_ntp_time()
+        ntp_datetime = datetime.fromtimestamp(ntp_time)
+        ntp_date = QDate(ntp_datetime.year, ntp_datetime.month, ntp_datetime.day)
+        ntp_time = QTime(ntp_datetime.hour, ntp_datetime.minute, ntp_datetime.second)
+        shared_data.set_system_time(ntp_date, ntp_time)
+
+    def get_ntp_time(self, host="pool.ntp.org"):
+        client = NTPClient()
+        response = client.request(host)
+        return response.tx_time
 
     def update_date(self, date):
         self.shared_data.date = date.toString("dd-MM-yyyy")
@@ -2023,4 +2070,4 @@ if __name__ == "__main__":
 
 # Instructions/Commands
 # sudo chmod 777 /tmp
-# pip3 install pip3 install adafruit-circuitpython-pn532 pyserial escpos pytesseract cryptography==36.0.0 pdfplumber pdf2image
+# pip3 install pip3 install adafruit-circuitpython-pn532 pyserial escpos pytesseract cryptography==36.0.0 pdfplumber pdf2image ntplib

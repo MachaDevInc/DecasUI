@@ -146,7 +146,7 @@ class VirtualKeyboard(tk.Tk):
         # Set the keyboard window to fullscreen
         # self.attributes("-fullscreen", True)
         # Set the keyboard window position
-        self.geometry(f"+{50}+{y}")
+        self.geometry(f"+{50}+{y-20}")
 
     def create_keyboard(self):
         for row_index, row in enumerate(self.keys, start=1):
